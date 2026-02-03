@@ -1,0 +1,23 @@
+# Git и IDE
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+
+# Сборки Maven (собираем внутри образа)
+target
+
+# Секреты (никогда не в образ)
+.env
+*.env
+
+# Документация (не нужна в образе)
+docs
+*.md
+!README.md
+
+# Логи и временные файлы
+*.log
+.DS_Store
+Thumbs.db

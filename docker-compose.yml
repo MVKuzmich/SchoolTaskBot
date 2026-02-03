@@ -1,0 +1,62 @@
+# Локальный запуск SchoolBot: PostgreSQL + приложение (сборка из исходников)
+# Использование:
+#   cp .env.example .env   # заполните TELEGRAM_BOT_TOKEN и др.
+#   docker compose up -d --build
+#   docker compose logs -f app
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: schoolbot-postgres
+    environment:
+      POSTGRES_DB: schoolbot
+      POSTGRES_USER: schoolbot
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-schoolbot}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U schoolbot -d schoolbot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - schoolbot-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: schoolbot-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/schoolbot
+      SPRING_DATASOURCE_USERNAME: schoolbot
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-schoolbot}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - schoolbot-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  schoolbot-network:
+    driver: bridge
