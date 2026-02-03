@@ -1,0 +1,33 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+*.jar
+*.war
+*.ear
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.ipr
+*.iws
+
+# Spring Boot
+*.log
+application-local.properties
+
+# Env (токены и секреты — не коммитить)
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Markdown
+*.md
+!README.md
+
+# Docs
+/docs/
