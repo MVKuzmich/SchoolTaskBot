@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-user-state-table
+      author: school-bot
+      comment: Таблица user_state для хранения состояния пользователя в диалоге
+      changes:
+        - createTable:
+            tableName: user_state
+            columns:
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: state
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state_set_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false

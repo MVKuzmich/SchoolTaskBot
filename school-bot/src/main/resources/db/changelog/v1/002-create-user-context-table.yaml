@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-user-context-table
+      author: school-bot
+      comment: Таблица user_context для хранения контекста пользователя (режим, класс, предмет, тема и т.д.)
+      changes:
+        - createTable:
+            tableName: user_context
+            columns:
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: mode
+                  type: VARCHAR(20)
+              - column:
+                  name: school_level
+                  type: VARCHAR(20)
+              - column:
+                  name: subject
+                  type: VARCHAR(20)
+              - column:
+                  name: topic
+                  type: VARCHAR(50)
+              - column:
+                  name: operation_type
+                  type: VARCHAR(30)
+              - column:
+                  name: quantity
+                  type: INT
+              - column:
+                  name: language
+                  type: VARCHAR(10)
+              - column:
+                  name: last_generation_params
+                  type: TEXT
+              - column:
+                  name: last_activity
+                  type: TIMESTAMP
+              - column:
+                  name: registered_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false

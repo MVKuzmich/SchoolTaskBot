@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: v1/001-create-user-state-table.yaml
+  - include:
+      file: v1/002-create-user-context-table.yaml
