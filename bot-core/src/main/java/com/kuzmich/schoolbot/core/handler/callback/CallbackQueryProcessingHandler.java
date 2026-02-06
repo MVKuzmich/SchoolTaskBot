@@ -18,10 +18,28 @@ public class CallbackQueryProcessingHandler {
     private final List<CallbackQueryHandler> handlers;
 
     public void process(TelegramClient client, Update update) {
-        String data = update.getCallbackQuery().getData();
+        if (update == null || update.getCallbackQuery() == null) {
+            log.debug("Получено обновление без callbackQuery: update={}", update);
+            return;
+        }
+
+        var callbackQuery = update.getCallbackQuery();
+        var from = callbackQuery.getFrom();
+        var message = callbackQuery.getMessage();
+
+        Long userId = from != null ? from.getId() : null;
+        Long chatId = message != null ? message.getChatId() : null;
+        String data = callbackQuery.getData();
+
         for (CallbackQueryHandler handler : handlers) {
             if (handler.canHandle(update)) {
                 try {
+                    log.info(
+                            "callback userId={} chatId={} data={}",
+                            userId,
+                            chatId,
+                            data
+                    );
                     handler.handle(client, update);
                 } catch (Exception e) {
                     log.error("Ошибка при обработке callback: {}", data, e);

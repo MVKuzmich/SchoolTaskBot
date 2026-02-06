@@ -19,10 +19,27 @@ public class CommandProcessingHandler {
     private final List<CommandHandler> handlers;
 
     public void process(TelegramClient client, Update update) {
-        String text = update.getMessage().getText();
+        if (update == null || update.getMessage() == null) {
+            log.debug("Получено обновление без message: update={}", update);
+            return;
+        }
+
+        var message = update.getMessage();
+        var from = message.getFrom();
+
+        Long userId = from != null ? from.getId() : null;
+        Long chatId = message.getChatId();
+        String text = message.getText();
+
         for (CommandHandler handler : handlers) {
             if (handler.canHandle(update)) {
                 try {
+                    log.info(
+                            "command userId={} chatId={} text={}",
+                            userId,
+                            chatId,
+                            text
+                    );
                     handler.handle(client, update);
                 } catch (Exception e) {
                     log.error("Ошибка при обработке команды: {}", text, e);

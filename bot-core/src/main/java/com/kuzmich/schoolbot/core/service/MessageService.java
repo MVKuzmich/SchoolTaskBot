@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
@@ -54,6 +55,29 @@ public class MessageService {
     public void sendFromKey(TelegramClient client, Long chatId, String messageKey, Object... args) {
         try {
             client.execute(buildFromKey(chatId, messageKey, args));
+        } catch (TelegramApiException e) {
+            throw new RuntimeException("Не удалось отправить сообщение", e);
+        }
+    }
+
+    /**
+     * Собирает SendMessage: текст по ключу и inline-клавиатура.
+     */
+    public SendMessage buildFromKey(Long chatId, String messageKey, InlineKeyboardMarkup replyMarkup, Object... args) {
+        String text = messageSource.getMessage(messageKey, args, Locale.getDefault());
+        return SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .replyMarkup(replyMarkup)
+                .build();
+    }
+
+    /**
+     * Отправляет в чат сообщение по ключу с inline-клавиатурой.
+     */
+    public void sendFromKey(TelegramClient client, Long chatId, String messageKey, InlineKeyboardMarkup replyMarkup, Object... args) {
+        try {
+            client.execute(buildFromKey(chatId, messageKey, replyMarkup, args));
         } catch (TelegramApiException e) {
             throw new RuntimeException("Не удалось отправить сообщение", e);
         }
