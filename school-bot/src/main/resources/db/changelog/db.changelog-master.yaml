@@ -3,3 +3,5 @@ databaseChangeLog:
       file: classpath:db/changelog/v1/001-create-user-state-table.yaml
   - include:
       file: classpath:db/changelog/v1/002-create-user-context-table.yaml
+  - include:
+      file: classpath:db/changelog/v1/003-add-privacy-consent-fields.yaml

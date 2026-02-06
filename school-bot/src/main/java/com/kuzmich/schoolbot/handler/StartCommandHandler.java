@@ -2,6 +2,7 @@ package com.kuzmich.schoolbot.handler;
 
 import com.kuzmich.schoolbot.core.handler.command.CommandHandler;
 import com.kuzmich.schoolbot.core.i18n.StartMessageKeys;
+import com.kuzmich.schoolbot.core.privacy.ConsentGate;
 import com.kuzmich.schoolbot.core.service.MessageService;
 import com.kuzmich.schoolbot.core.service.UserContextService;
 import com.kuzmich.schoolbot.core.service.UserStateService;
@@ -15,15 +16,19 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 import java.util.Objects;
 
 /**
- * Обработчик команды /start: приветствие, установка состояния AWAITING_MODE
- * и показ inline-клавиатуры выбора режима (Генератор / Тренажёр) по MathBot-Scenarios.
+ * Обработчик команды /start: проверка согласия на обработку ПД, при отсутствии — экран согласия;
+ * при наличии — приветствие, установка состояния AWAITING_MODE и клавиатура выбора режима (MathBot-Scenarios).
  */
 @Component
 @RequiredArgsConstructor
 public class StartCommandHandler implements CommandHandler {
 
     private static final String COMMAND_START = "/start";
+    private static final String KEY_CONSENT_REQUEST = "privacy.consent.request";
+    private static final String KEY_CONSENT_BUTTON_ACCEPT = "privacy.consent.button.accept";
+    private static final String KEY_CONSENT_BUTTON_POLICY = "privacy.consent.button.policy";
 
+    private final ConsentGate consentGate;
     private final MessageService messageService;
     private final UserStateService userStateService;
     private final UserContextService<UserContext> userContextService;
@@ -44,6 +49,11 @@ public class StartCommandHandler implements CommandHandler {
                 : null;
         if (userId == null) {
             messageService.sendFromKey(client, chatId, StartMessageKeys.START_MESSAGE);
+            return;
+        }
+        if (consentGate.checkAndSendIfNeeded(client, userId, chatId,
+                KEY_CONSENT_REQUEST, KEY_CONSENT_BUTTON_ACCEPT, KEY_CONSENT_BUTTON_POLICY)) {
+            userStateService.setState(userId, UserState.AWAITING_CONSENT);
             return;
         }
         userStateService.setState(userId, UserState.AWAITING_MODE);

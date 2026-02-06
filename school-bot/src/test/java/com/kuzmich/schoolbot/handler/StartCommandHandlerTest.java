@@ -1,6 +1,7 @@
 package com.kuzmich.schoolbot.handler;
 
 import com.kuzmich.schoolbot.core.i18n.StartMessageKeys;
+import com.kuzmich.schoolbot.core.privacy.ConsentGate;
 import com.kuzmich.schoolbot.core.service.MessageService;
 import com.kuzmich.schoolbot.core.service.UserContextService;
 import com.kuzmich.schoolbot.core.service.UserStateService;
@@ -34,6 +35,8 @@ class StartCommandHandlerTest {
     private static final Long USER_ID = 200L;
 
     @Mock
+    private ConsentGate consentGate;
+    @Mock
     private MessageService messageService;
     @Mock
     private UserStateService userStateService;
@@ -46,7 +49,7 @@ class StartCommandHandlerTest {
 
     @BeforeEach
     void setUp() {
-        handler = new StartCommandHandler(messageService, userStateService, userContextService);
+        handler = new StartCommandHandler(consentGate, messageService, userStateService, userContextService);
     }
 
     @Test
@@ -83,7 +86,7 @@ class StartCommandHandlerTest {
     }
 
     @Test
-    @DisplayName("handle: устанавливает AWAITING_MODE, getOrCreate контекст, отправляет приветствие с клавиатурой")
+    @DisplayName("handle: при наличии согласия — устанавливает AWAITING_MODE, getOrCreate контекст, отправляет приветствие с клавиатурой")
     void handle_setsStateAndSendsWelcomeWithKeyboard() {
         var update = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.Update.class);
         var message = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.message.Message.class);
@@ -92,6 +95,7 @@ class StartCommandHandlerTest {
         org.mockito.Mockito.when(message.getChatId()).thenReturn(CHAT_ID);
         org.mockito.Mockito.when(message.getFrom()).thenReturn(from);
         org.mockito.Mockito.when(from.getId()).thenReturn(USER_ID);
+        when(consentGate.checkAndSendIfNeeded(any(), eq(USER_ID), eq(CHAT_ID), any(), any(), any())).thenReturn(false);
         UserContext ctx = new UserContext(USER_ID);
         when(userContextService.getOrCreate(USER_ID)).thenReturn(ctx);
 
@@ -100,6 +104,24 @@ class StartCommandHandlerTest {
         verify(userStateService).setState(USER_ID, UserState.AWAITING_MODE);
         verify(userContextService).getOrCreate(USER_ID);
         verify(messageService).sendFromKey(eq(client), eq(CHAT_ID), eq(StartMessageKeys.START_MESSAGE), any(InlineKeyboardMarkup.class));
+    }
+
+    @Test
+    @DisplayName("handle: при отсутствии согласия — показывает экран согласия и устанавливает AWAITING_CONSENT")
+    void handle_whenNoConsent_sendsConsentScreenAndSetsAwaitingConsent() {
+        var update = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.Update.class);
+        var message = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.message.Message.class);
+        var from = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.User.class);
+        org.mockito.Mockito.when(update.getMessage()).thenReturn(message);
+        org.mockito.Mockito.when(message.getChatId()).thenReturn(CHAT_ID);
+        org.mockito.Mockito.when(message.getFrom()).thenReturn(from);
+        org.mockito.Mockito.when(from.getId()).thenReturn(USER_ID);
+        when(consentGate.checkAndSendIfNeeded(any(), eq(USER_ID), eq(CHAT_ID), any(), any(), any())).thenReturn(true);
+
+        handler.handle(client, update);
+
+        verify(userStateService).setState(USER_ID, UserState.AWAITING_CONSENT);
+        // getOrCreate не вызывается — пользователь ещё не дал согласие
     }
 
     @Test

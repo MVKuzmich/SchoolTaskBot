@@ -33,6 +33,8 @@ SchoolBot/
 
 ## Сборка и запуск
 
+**Требования:** Java 21, Maven, переменная **JAVA_HOME** (каталог JDK).
+
 ```bash
 # Сборка всего проекта
 mvn clean install

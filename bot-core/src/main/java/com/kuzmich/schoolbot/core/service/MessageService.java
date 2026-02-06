@@ -82,4 +82,11 @@ public class MessageService {
             throw new RuntimeException("Не удалось отправить сообщение", e);
         }
     }
+
+    /**
+     * Возвращает текст по ключу из messages*.properties (для сборки клавиатур и т.п.).
+     */
+    public String getText(String messageKey, Object... args) {
+        return messageSource.getMessage(messageKey, args, Locale.getDefault());
+    }
 }

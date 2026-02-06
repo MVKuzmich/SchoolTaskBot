@@ -65,6 +65,12 @@ public class UserContextEntity {
     @Column(name = "registered_at", nullable = false)
     private LocalDateTime registeredAt;
 
+    @Column(name = "privacy_consent_at")
+    private LocalDateTime privacyConsentAt;
+
+    @Column(name = "privacy_policy_version", length = 50)
+    private String privacyPolicyVersion;
+
     public UserContextEntity(Long userId) {
         this.userId = Objects.requireNonNull(userId, "userId");
         this.registeredAt = LocalDateTime.now();

@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-add-privacy-consent-fields
+      author: school-bot
+      comment: Поля согласия на обработку персональных данных в user_context
+      changes:
+        - addColumn:
+            tableName: user_context
+            columns:
+              - column:
+                  name: privacy_consent_at
+                  type: TIMESTAMP
+              - column:
+                  name: privacy_policy_version
+                  type: VARCHAR(50)
