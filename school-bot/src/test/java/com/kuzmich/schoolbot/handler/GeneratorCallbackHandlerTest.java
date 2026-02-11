@@ -5,6 +5,7 @@ import com.kuzmich.schoolbot.core.service.MessageService;
 import com.kuzmich.schoolbot.core.service.UserContextService;
 import com.kuzmich.schoolbot.core.service.UserStateService;
 import com.kuzmich.schoolbot.context.UserContext;
+import com.kuzmich.schoolbot.generator.service.PdfGenerationService;
 import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 import com.kuzmich.schoolbot.state.UserState;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,12 +44,14 @@ class GeneratorCallbackHandlerTest {
     private UserContextService<UserContext> userContextService;
     @Mock
     private TelegramClient client;
+    @Mock
+    private PdfGenerationService pdfGenerationService;
 
     private GeneratorCallbackHandler handler;
 
     @BeforeEach
     void setUp() {
-        handler = new GeneratorCallbackHandler(messageService, userStateService, userContextService);
+        handler = new GeneratorCallbackHandler(messageService, userStateService, userContextService, pdfGenerationService);
     }
 
     @Test

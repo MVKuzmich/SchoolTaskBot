@@ -35,8 +35,6 @@ class SubtractionGeneratorTest {
 
     @BeforeEach
     void setUp() {
-        when(messageService.getText(anyString(), any(), any()))
-                .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = __");
         generator = new SubtractionGenerator(messageService);
     }
 
@@ -72,6 +70,9 @@ class SubtractionGeneratorTest {
         @Test
         @DisplayName("все ответы корректны: a - b = answer, результат не отрицательный")
         void shouldGenerateCorrectAnswers_subtraction() {
+            when(messageService.getText(anyString(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = __");
+
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.SUBTRACTION_10)
                     .numberRange(new Range(0, 10))

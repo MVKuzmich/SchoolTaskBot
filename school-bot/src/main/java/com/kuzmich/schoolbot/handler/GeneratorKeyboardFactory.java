@@ -86,6 +86,139 @@ public final class GeneratorKeyboardFactory {
     }
 
     /**
+     * Клавиатура выбора темы (пока одна — Арифметика).
+     */
+    public static InlineKeyboardMarkup topicSelectionKeyboard(String arithmeticLabel, String backLabel, String menuLabel) {
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(arithmeticLabel)
+                                .callbackData(CallbackData.TOPIC_ARITHMETIC)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(backLabel)
+                                .callbackData(CallbackData.BACK_TO_CLASS)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(menuLabel)
+                                .callbackData(CallbackData.MENU)
+                                .build()))
+                .build();
+    }
+
+    /**
+     * Клавиатура выбора типа операции арифметики.
+     */
+    public static InlineKeyboardMarkup operationSelectionKeyboard(String add10Label,
+                                                                  String sub10Label,
+                                                                  String add20NoCarryLabel,
+                                                                  String sub20NoCarryLabel,
+                                                                  String backLabel,
+                                                                  String menuLabel) {
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(add10Label)
+                                .callbackData(CallbackData.OP_ADDITION_10)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(sub10Label)
+                                .callbackData(CallbackData.OP_SUBTRACTION_10)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(add20NoCarryLabel)
+                                .callbackData(CallbackData.OP_ADDITION_20_NO_CARRY)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(sub20NoCarryLabel)
+                                .callbackData(CallbackData.OP_SUBTRACTION_20_NO_CARRY)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(backLabel)
+                                .callbackData(CallbackData.BACK_TO_CLASS)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(menuLabel)
+                                .callbackData(CallbackData.MENU)
+                                .build()))
+                .build();
+    }
+
+    /**
+     * Клавиатура выбора количества примеров.
+     */
+    public static InlineKeyboardMarkup quantitySelectionKeyboard(String qty10Label,
+                                                                 String qty20Label,
+                                                                 String backLabel,
+                                                                 String menuLabel) {
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(qty10Label)
+                                .callbackData(CallbackData.QTY_10)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(qty20Label)
+                                .callbackData(CallbackData.QTY_20)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(backLabel)
+                                .callbackData(CallbackData.BACK_TO_CLASS)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(menuLabel)
+                                .callbackData(CallbackData.MENU)
+                                .build()))
+                .build();
+    }
+
+    /**
+     * Клавиатура подтверждения генерации PDF.
+     */
+    public static InlineKeyboardMarkup confirmationKeyboard(String generateLabel, String backLabel, String menuLabel) {
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(generateLabel)
+                                .callbackData(CallbackData.GEN_CONFIRM_PDF)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(backLabel)
+                                .callbackData(CallbackData.BACK_TO_CLASS)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(menuLabel)
+                                .callbackData(CallbackData.MENU)
+                                .build()))
+                .build();
+    }
+
+    /**
+     * Клавиатура после выбора предмета: демо-генерация PDF и Главное меню.
+     */
+    public static InlineKeyboardMarkup demoGenerationKeyboard(String demoLabel, String menuLabel) {
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(demoLabel)
+                                .callbackData(CallbackData.GEN_DEMO_PDF)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(menuLabel)
+                                .callbackData(CallbackData.MENU)
+                                .build()))
+                .build();
+    }
+
+    /**
      * Одна кнопка «Главное меню» (например, после заглушки тренажёра).
      */
     public static InlineKeyboardMarkup mainMenuOnlyKeyboard(String menuLabel) {

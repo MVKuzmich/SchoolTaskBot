@@ -34,8 +34,6 @@ class Subtraction20NoCarryGeneratorTest {
 
     @BeforeEach
     void setUp() {
-        when(messageService.getText(anyString(), any(), any()))
-                .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = __");
         generator = new Subtraction20NoCarryGenerator(messageService);
     }
 
@@ -49,6 +47,9 @@ class Subtraction20NoCarryGeneratorTest {
     @Test
     @DisplayName("все примеры без перехода через десяток, ответ неотрицательный")
     void shouldNotCrossDecimal_subtraction20() {
+        when(messageService.getText(anyString(), any(), any()))
+                .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = __");
+
         ArithmeticContext context = ArithmeticContext.builder()
                 .operationType(OperationType.SUBTRACTION_20_NO_CARRY)
                 .numberRange(new Range(0, 20))

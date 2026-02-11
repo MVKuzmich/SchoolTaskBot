@@ -34,8 +34,6 @@ class Addition20NoCarryGeneratorTest {
 
     @BeforeEach
     void setUp() {
-        when(messageService.getText(anyString(), any(), any()))
-                .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = __");
         generator = new Addition20NoCarryGenerator(messageService);
     }
 
@@ -49,6 +47,9 @@ class Addition20NoCarryGeneratorTest {
     @Test
     @DisplayName("все примеры в пределах 20 и без перехода через десяток")
     void shouldNotCrossDecimal_addition20() {
+        when(messageService.getText(anyString(), any(), any()))
+                .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = __");
+
         ArithmeticContext context = ArithmeticContext.builder()
                 .operationType(OperationType.ADDITION_20_NO_CARRY)
                 .numberRange(new Range(0, 20))

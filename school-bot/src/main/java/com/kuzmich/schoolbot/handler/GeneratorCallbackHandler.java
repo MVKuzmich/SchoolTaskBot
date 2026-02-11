@@ -11,6 +11,9 @@ import com.kuzmich.schoolbot.domain.Mode;
 import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 import com.kuzmich.schoolbot.domain.SchoolLevel;
 import com.kuzmich.schoolbot.domain.Subject;
+import com.kuzmich.schoolbot.generator.OperationType;
+import com.kuzmich.schoolbot.generator.service.PdfGenerationAccessException;
+import com.kuzmich.schoolbot.generator.service.PdfGenerationService;
 import com.kuzmich.schoolbot.state.UserState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -30,6 +33,7 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
     private final MessageService messageService;
     private final UserStateService userStateService;
     private final UserContextService<UserContext> userContextService;
+    private final PdfGenerationService pdfGenerationService;
 
     @Override
     public boolean canHandle(Update update) {
@@ -41,29 +45,29 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
             return false;
         }
         return data.startsWith("mode_") || data.startsWith("gen_")
-                || data.startsWith("subject_") || CallbackData.BACK_TO_MODE.equals(data)
+                || data.startsWith("subject_") || data.startsWith("topic_")
+                || data.startsWith("op_") || data.startsWith("qty_")
+                || CallbackData.BACK_TO_MODE.equals(data)
                 || CallbackData.BACK_TO_CLASS.equals(data) || CallbackData.MENU.equals(data)
                 || "help".equals(data);
     }
 
     @Override
     public void handle(TelegramClient client, Update update) {
-        String data = Validation.requireOneOf(update.getCallbackQuery().getData(), "callbackData",
+        var callbackQuery = Validation.requireNonNull(update.getCallbackQuery(), "callbackQuery");
+        String data = Validation.requireOneOf(callbackQuery.getData(), "callbackData",
                 CallbackData.MODE_GENERATOR, CallbackData.MODE_TRAINER, CallbackData.GEN_ELEMENTARY,
-                CallbackData.GEN_SECONDARY, CallbackData.SUBJECT_MATH, CallbackData.BACK_TO_MODE,
-                CallbackData.BACK_TO_CLASS, CallbackData.MENU, "help");
-        Long chatId = update.getCallbackQuery().getMessage() != null
-                ? update.getCallbackQuery().getMessage().getChatId()
-                : null;
-        Long userId = update.getCallbackQuery().getFrom() != null
-                ? update.getCallbackQuery().getFrom().getId()
-                : null;
-        String callbackQueryId = update.getCallbackQuery().getId();
-
-        if (chatId == null || userId == null) {
-            answerCallback(client, callbackQueryId);
-            return;
-        }
+                CallbackData.GEN_SECONDARY, CallbackData.SUBJECT_MATH, CallbackData.TOPIC_ARITHMETIC,
+                CallbackData.OP_ADDITION_10, CallbackData.OP_SUBTRACTION_10,
+                CallbackData.OP_ADDITION_20_NO_CARRY, CallbackData.OP_SUBTRACTION_20_NO_CARRY,
+                CallbackData.QTY_10, CallbackData.QTY_20,
+                CallbackData.GEN_DEMO_PDF, CallbackData.GEN_CONFIRM_PDF,
+                CallbackData.BACK_TO_MODE, CallbackData.BACK_TO_CLASS, CallbackData.MENU, "help");
+        var message = Validation.requireNonNull(callbackQuery.getMessage(), "message");
+        long chatId = Validation.requirePositiveLong(message.getChatId(), "chatId");
+        var from = Validation.requireNonNull(callbackQuery.getFrom(), "from");
+        long userId = Validation.requirePositiveLong(from.getId(), "userId");
+        String callbackQueryId = callbackQuery.getId();
 
         answerCallback(client, callbackQueryId);
 
@@ -73,6 +77,16 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
             case CallbackData.GEN_ELEMENTARY -> handleGenElementary(client, chatId, userId);
             case CallbackData.GEN_SECONDARY -> handleGenSecondary(client, chatId, userId);
             case CallbackData.SUBJECT_MATH -> handleSubjectMath(client, chatId, userId);
+            case CallbackData.TOPIC_ARITHMETIC -> handleTopicArithmetic(client, chatId, userId);
+            case CallbackData.OP_ADDITION_10,
+                    CallbackData.OP_SUBTRACTION_10,
+                    CallbackData.OP_ADDITION_20_NO_CARRY,
+                    CallbackData.OP_SUBTRACTION_20_NO_CARRY ->
+                    handleOperationSelected(client, chatId, userId, data);
+            case CallbackData.QTY_10, CallbackData.QTY_20 ->
+                    handleQuantitySelected(client, chatId, userId, data);
+            case CallbackData.GEN_CONFIRM_PDF -> handleConfirmPdf(client, chatId, userId);
+            case CallbackData.GEN_DEMO_PDF -> handleDemoPdf(client, chatId, userId);
             case CallbackData.BACK_TO_MODE -> handleBackToMode(client, chatId, userId);
             case CallbackData.BACK_TO_CLASS -> handleBackToClass(client, chatId, userId);
             case CallbackData.MENU -> handleMenu(client, chatId, userId);
@@ -139,8 +153,11 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
         ctx.setSubject(Subject.MATH);
         userContextService.save(ctx);
         userStateService.setState(userId, UserState.AWAITING_TOPIC);
-        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.TOPIC_COMING,
-                GeneratorKeyboardFactory.mainMenuOnlyKeyboard(messageService.getText(GeneratorMessageKeys.BUTTON_MENU)));
+        String arithmetic = messageService.getText(GeneratorMessageKeys.TOPIC_ARITHMETIC);
+        String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
+        String menu = messageService.getText(GeneratorMessageKeys.BUTTON_MENU);
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.TOPIC_TITLE,
+                GeneratorKeyboardFactory.topicSelectionKeyboard(arithmetic, back, menu));
     }
 
     private void handleBackToMode(TelegramClient client, Long chatId, Long userId) {
@@ -168,5 +185,144 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
     private void handleHelp(TelegramClient client, Long chatId) {
         messageService.sendFromKey(client, chatId, GeneratorMessageKeys.HELP_MESSAGE,
                 GeneratorKeyboardFactory.mainMenuOnlyKeyboard(messageService.getText(GeneratorMessageKeys.BUTTON_MENU)));
+    }
+
+    private void handleTopicArithmetic(TelegramClient client, Long chatId, Long userId) {
+        UserContext ctx = userContextService.getOrCreate(userId);
+        ctx.setTopic("ARITHMETIC");
+        userContextService.save(ctx);
+        userStateService.setState(userId, UserState.AWAITING_OPERATION_TYPE);
+
+        String add10 = messageService.getText(GeneratorMessageKeys.OPERATION_ADDITION_10);
+        String sub10 = messageService.getText(GeneratorMessageKeys.OPERATION_SUBTRACTION_10);
+        String add20 = messageService.getText(GeneratorMessageKeys.OPERATION_ADDITION_20_NO_CARRY);
+        String sub20 = messageService.getText(GeneratorMessageKeys.OPERATION_SUBTRACTION_20_NO_CARRY);
+        String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
+        String menu = messageService.getText(GeneratorMessageKeys.BUTTON_MENU);
+
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.OPERATION_TITLE,
+                GeneratorKeyboardFactory.operationSelectionKeyboard(add10, sub10, add20, sub20, back, menu));
+    }
+
+    private void handleOperationSelected(TelegramClient client, Long chatId, Long userId, String data) {
+        UserContext ctx = userContextService.getOrCreate(userId);
+        OperationType operationType = mapCallbackToOperationType(data);
+        ctx.setOperationType(operationType.name());
+        userContextService.save(ctx);
+        userStateService.setState(userId, UserState.AWAITING_QUANTITY);
+
+        String qty10 = messageService.getText(GeneratorMessageKeys.QUANTITY_10);
+        String qty20 = messageService.getText(GeneratorMessageKeys.QUANTITY_20);
+        String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
+        String menu = messageService.getText(GeneratorMessageKeys.BUTTON_MENU);
+
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.QUANTITY_TITLE,
+                GeneratorKeyboardFactory.quantitySelectionKeyboard(qty10, qty20, back, menu));
+    }
+
+    private void handleQuantitySelected(TelegramClient client, Long chatId, Long userId, String data) {
+        int quantity = CallbackData.QTY_10.equals(data) ? 10 : 20;
+        UserContext ctx = userContextService.getOrCreate(userId);
+        ctx.setQuantity(quantity);
+        userContextService.save(ctx);
+        userStateService.setState(userId, UserState.AWAITING_CONFIRMATION);
+
+        String confirmTitle = messageService.getText(GeneratorMessageKeys.CONFIRM_TITLE);
+        String generate = messageService.getText(GeneratorMessageKeys.BUTTON_GENERATE_PDF);
+        String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
+        String menu = messageService.getText(GeneratorMessageKeys.BUTTON_MENU);
+
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.CONFIRM_TITLE,
+                GeneratorKeyboardFactory.confirmationKeyboard(generate, back, menu),
+                confirmTitle);
+    }
+
+    private void handleConfirmPdf(TelegramClient client, Long chatId, Long userId) {
+        UserContext ctx = userContextService.getOrCreate(userId);
+        OperationType operationType;
+        try {
+            operationType = OperationType.valueOf(ctx.getOperationType());
+        } catch (Exception e) {
+            messageService.sendFromKey(client, chatId, GeneratorMessageKeys.PDF_GENERATION_ERROR);
+            userStateService.setState(userId, UserState.ERROR);
+            return;
+        }
+        int quantity = ctx.getQuantity() != null ? ctx.getQuantity() : 20;
+
+        userStateService.setState(userId, UserState.GENERATING);
+
+        String operationLabel = resolveOperationLabel(operationType);
+        String title = "Арифметика: " + operationLabel;
+
+        try {
+            byte[] pdf = pdfGenerationService.generateArithmeticPdf(userId, operationType, quantity, title);
+
+            org.telegram.telegrambots.meta.api.objects.InputFile inputFile =
+                    new org.telegram.telegrambots.meta.api.objects.InputFile(
+                            new java.io.ByteArrayInputStream(pdf),
+                            "math_tasks.pdf");
+
+            org.telegram.telegrambots.meta.api.methods.send.SendDocument sendDocument =
+                    org.telegram.telegrambots.meta.api.methods.send.SendDocument.builder()
+                            .chatId(chatId.toString())
+                            .document(inputFile)
+                            .build();
+
+            client.execute(sendDocument);
+            userStateService.setState(userId, UserState.COMPLETED);
+        } catch (PdfGenerationAccessException e) {
+            messageService.sendText(client, chatId, e.getMessage());
+            userStateService.setState(userId, UserState.COMPLETED);
+        } catch (Exception e) {
+            messageService.sendFromKey(client, chatId, GeneratorMessageKeys.PDF_GENERATION_ERROR);
+            userStateService.setState(userId, UserState.ERROR);
+        }
+    }
+
+    private OperationType mapCallbackToOperationType(String data) {
+        return switch (data) {
+            case CallbackData.OP_ADDITION_10 -> OperationType.ADDITION_10;
+            case CallbackData.OP_SUBTRACTION_10 -> OperationType.SUBTRACTION_10;
+            case CallbackData.OP_ADDITION_20_NO_CARRY -> OperationType.ADDITION_20_NO_CARRY;
+            case CallbackData.OP_SUBTRACTION_20_NO_CARRY -> OperationType.SUBTRACTION_20_NO_CARRY;
+            default -> throw new IllegalArgumentException("Unknown operation callback: " + data);
+        };
+    }
+
+    private String resolveOperationLabel(OperationType operationType) {
+        return switch (operationType) {
+            case ADDITION_10 -> messageService.getText(GeneratorMessageKeys.OPERATION_ADDITION_10);
+            case SUBTRACTION_10 -> messageService.getText(GeneratorMessageKeys.OPERATION_SUBTRACTION_10);
+            case ADDITION_20_NO_CARRY -> messageService.getText(GeneratorMessageKeys.OPERATION_ADDITION_20_NO_CARRY);
+            case SUBTRACTION_20_NO_CARRY -> messageService.getText(GeneratorMessageKeys.OPERATION_SUBTRACTION_20_NO_CARRY);
+        };
+    }
+
+    private void handleDemoPdf(TelegramClient client, Long chatId, Long userId) {
+        userStateService.setState(userId, UserState.GENERATING);
+        String title = messageService.getText(GeneratorMessageKeys.PDF_DEMO_TITLE);
+        try {
+            byte[] pdf = pdfGenerationService.generateDemoForUser(userId, title);
+
+            org.telegram.telegrambots.meta.api.objects.InputFile inputFile =
+                    new org.telegram.telegrambots.meta.api.objects.InputFile(
+                            new java.io.ByteArrayInputStream(pdf),
+                            "math_tasks_demo.pdf");
+
+            org.telegram.telegrambots.meta.api.methods.send.SendDocument sendDocument =
+                    org.telegram.telegrambots.meta.api.methods.send.SendDocument.builder()
+                            .chatId(chatId.toString())
+                            .document(inputFile)
+                            .build();
+
+            client.execute(sendDocument);
+            userStateService.setState(userId, UserState.COMPLETED);
+        } catch (PdfGenerationAccessException e) {
+            messageService.sendText(client, chatId, e.getMessage());
+            userStateService.setState(userId, UserState.COMPLETED);
+        } catch (Exception e) {
+            messageService.sendFromKey(client, chatId, GeneratorMessageKeys.PDF_GENERATION_ERROR);
+            userStateService.setState(userId, UserState.ERROR);
+        }
     }
 }

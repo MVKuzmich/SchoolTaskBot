@@ -35,15 +35,6 @@ class GeneratorFactoryTest {
 
     @BeforeEach
     void setUp() {
-        when(messageService.getText(anyString(), any(), any())).thenAnswer(inv -> {
-            Object a = inv.getArgument(1);
-            Object b = inv.getArgument(2);
-            String key = inv.getArgument(0, String.class);
-            if (key != null && key.contains("subtraction")) {
-                return a + " - " + b + " = __";
-            }
-            return a + " + " + b + " = __";
-        });
         factory = new GeneratorFactory(List.of(
                 new AdditionGenerator(messageService),
                 new SubtractionGenerator(messageService),
@@ -63,6 +54,16 @@ class GeneratorFactoryTest {
     @Test
     @DisplayName("getGenerator(ADDITION_10) возвращает генератор, дающий сложение в пределах 10")
     void getGenerator_addition10_returnsValidTasks() {
+        when(messageService.getText(anyString(), any(), any())).thenAnswer(inv -> {
+            Object a = inv.getArgument(1);
+            Object b = inv.getArgument(2);
+            String key = inv.getArgument(0, String.class);
+            if (key != null && key.contains("subtraction")) {
+                return a + " - " + b + " = __";
+            }
+            return a + " + " + b + " = __";
+        });
+
         TaskGenerator gen = factory.getGenerator(OperationType.ADDITION_10);
         ArithmeticContext context = ArithmeticContext.builder()
                 .operationType(OperationType.ADDITION_10)
@@ -83,6 +84,16 @@ class GeneratorFactoryTest {
     @Test
     @DisplayName("getGenerator(SUBTRACTION_10) возвращает генератор вычитания в пределах 10")
     void getGenerator_subtraction10_returnsValidTasks() {
+        when(messageService.getText(anyString(), any(), any())).thenAnswer(inv -> {
+            Object a = inv.getArgument(1);
+            Object b = inv.getArgument(2);
+            String key = inv.getArgument(0, String.class);
+            if (key != null && key.contains("subtraction")) {
+                return a + " - " + b + " = __";
+            }
+            return a + " + " + b + " = __";
+        });
+
         TaskGenerator gen = factory.getGenerator(OperationType.SUBTRACTION_10);
         ArithmeticContext context = ArithmeticContext.builder()
                 .operationType(OperationType.SUBTRACTION_10)
@@ -100,6 +111,16 @@ class GeneratorFactoryTest {
     @Test
     @DisplayName("getGenerator(ADDITION_20_NO_CARRY) возвращает генератор сложения без перехода")
     void getGenerator_addition20NoCarry_returnsValidTasks() {
+        when(messageService.getText(anyString(), any(), any())).thenAnswer(inv -> {
+            Object a = inv.getArgument(1);
+            Object b = inv.getArgument(2);
+            String key = inv.getArgument(0, String.class);
+            if (key != null && key.contains("subtraction")) {
+                return a + " - " + b + " = __";
+            }
+            return a + " + " + b + " = __";
+        });
+
         TaskGenerator gen = factory.getGenerator(OperationType.ADDITION_20_NO_CARRY);
         ArithmeticContext context = ArithmeticContext.builder()
                 .operationType(OperationType.ADDITION_20_NO_CARRY)
@@ -122,6 +143,16 @@ class GeneratorFactoryTest {
     @Test
     @DisplayName("getGenerator(SUBTRACTION_20_NO_CARRY) возвращает генератор вычитания без перехода")
     void getGenerator_subtraction20NoCarry_returnsValidTasks() {
+        when(messageService.getText(anyString(), any(), any())).thenAnswer(inv -> {
+            Object a = inv.getArgument(1);
+            Object b = inv.getArgument(2);
+            String key = inv.getArgument(0, String.class);
+            if (key != null && key.contains("subtraction")) {
+                return a + " - " + b + " = __";
+            }
+            return a + " + " + b + " = __";
+        });
+
         TaskGenerator gen = factory.getGenerator(OperationType.SUBTRACTION_20_NO_CARRY);
         ArithmeticContext context = ArithmeticContext.builder()
                 .operationType(OperationType.SUBTRACTION_20_NO_CARRY)

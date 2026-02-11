@@ -30,10 +30,35 @@ public final class GeneratorMessageKeys {
     public static final String CLASS_SECONDARY = "generator.class.secondary";
     /** Подпись предмета «Математика». */
     public static final String SUBJECT_MATH = "generator.subject.math";
-    /** Сообщение «Темы скоро». */
-    public static final String TOPIC_COMING = "generator.topic.coming";
+    /** Заголовок выбора темы (арифметика и т.п.). */
+    public static final String TOPIC_TITLE = "generator.topic.title";
+    /** Тема «Арифметика». */
+    public static final String TOPIC_ARITHMETIC = "generator.topic.arithmetic";
     /** Текст справки (кнопка «Справка»). */
     public static final String HELP_MESSAGE = "help.message";
+
+    /** Подпись кнопки демо-генерации PDF. */
+    public static final String BUTTON_PDF_DEMO = "generator.button.demo.pdf";
+    /** Заголовок демо-PDF. */
+    public static final String PDF_DEMO_TITLE = "generator.pdf.demo.title";
+    /** Сообщение об ошибке генерации PDF. */
+    public static final String PDF_GENERATION_ERROR = "generator.pdf.generation.error";
+
+    /** Заголовок выбора типа операции. */
+    public static final String OPERATION_TITLE = "generator.operation.title";
+    public static final String OPERATION_ADDITION_10 = "generator.operation.addition10";
+    public static final String OPERATION_SUBTRACTION_10 = "generator.operation.subtraction10";
+    public static final String OPERATION_ADDITION_20_NO_CARRY = "generator.operation.addition20.no.carry";
+    public static final String OPERATION_SUBTRACTION_20_NO_CARRY = "generator.operation.subtraction20.no.carry";
+
+    /** Заголовок выбора количества примеров. */
+    public static final String QUANTITY_TITLE = "generator.quantity.title";
+    public static final String QUANTITY_10 = "generator.quantity.10";
+    public static final String QUANTITY_20 = "generator.quantity.20";
+
+    /** Заголовок подтверждения генерации и кнопка «Создать PDF». */
+    public static final String CONFIRM_TITLE = "generator.confirm.title";
+    public static final String BUTTON_GENERATE_PDF = "generator.button.generate.pdf";
 
     /** Формат вопроса сложения: {0} + {1} = __ */
     public static final String QUESTION_FORMAT_ADDITION = "generator.arithmetic.question.format.addition";

@@ -35,8 +35,6 @@ class AdditionGeneratorTest {
 
     @BeforeEach
     void setUp() {
-        when(messageService.getText(anyString(), any(), any()))
-                .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = __");
         generator = new AdditionGenerator(messageService);
     }
 
@@ -54,6 +52,9 @@ class AdditionGeneratorTest {
         @Test
         @DisplayName("возвращает 20 заданий с ответами в [0, 10]")
         void shouldGenerateValidAdditionTasks_range0to10() {
+            when(messageService.getText(anyString(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = __");
+
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.ADDITION_10)
                     .numberRange(new Range(0, 10))
@@ -73,6 +74,9 @@ class AdditionGeneratorTest {
         @Test
         @DisplayName("все ответы корректны: a + b = answer")
         void shouldGenerateCorrectAnswers_addition() {
+            when(messageService.getText(anyString(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = __");
+
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.ADDITION_10)
                     .numberRange(new Range(0, 10))
@@ -126,6 +130,9 @@ class AdditionGeneratorTest {
         @Test
         @DisplayName("при quantity = 50 примеры не повторяются")
         void shouldGenerateUniqueTasks_whenQuantity50() {
+            when(messageService.getText(anyString(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = __");
+
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.ADDITION_10)
                     .numberRange(new Range(0, 10))
@@ -142,6 +149,9 @@ class AdditionGeneratorTest {
         @Test
         @DisplayName("при quantity = 100 допускаются повторы")
         void shouldAllowDuplicates_whenQuantity100() {
+            when(messageService.getText(anyString(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = __");
+
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.ADDITION_10)
                     .numberRange(new Range(0, 10))
