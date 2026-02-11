@@ -1,6 +1,7 @@
 package com.kuzmich.schoolbot.context;
 
 import com.kuzmich.schoolbot.core.service.PrivacyConsentService;
+import com.kuzmich.schoolbot.core.validation.Validation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,9 +30,7 @@ public class SchoolBotPrivacyConsentService implements PrivacyConsentService {
     @Override
     @Transactional(readOnly = true)
     public boolean hasValidConsent(Long userId) {
-        if (userId == null) {
-            return false;
-        }
+        Validation.requireNonNull(userId, "userId");
         return repository.findById(userId)
                 .filter(e -> e.getPrivacyConsentAt() != null)
                 .filter(e -> Objects.equals(e.getPrivacyPolicyVersion(), privacyPolicyVersion))
@@ -41,9 +40,7 @@ public class SchoolBotPrivacyConsentService implements PrivacyConsentService {
     @Override
     @Transactional
     public void recordConsent(Long userId) {
-        if (userId == null) {
-            return;
-        }
+        Validation.requireNonNull(userId, "userId");
         UserContextEntity entity = repository.findById(userId)
                 .orElseGet(() -> {
                     UserContextEntity newEntity = new UserContextEntity(userId);

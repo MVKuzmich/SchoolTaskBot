@@ -1,5 +1,12 @@
 package com.kuzmich.schoolbot.state;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,13 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import com.kuzmich.schoolbot.core.validation.ValidationException;
 
 /**
  * Unit-тесты {@link SchoolBotUserStateService}: дефолт INITIAL, setState, clearState, isWaitingForInput.
@@ -48,10 +49,11 @@ class SchoolBotUserStateServiceTest {
     }
 
     @Test
-    @DisplayName("getState: при null userId возвращает INITIAL")
-    void getState_whenUserIdNull_returnsInitial() {
-        Object state = service.getState(null);
-        assertThat(state).isEqualTo(UserState.INITIAL);
+    @DisplayName("getState: при null userId выбрасывает ValidationException")
+    void getState_whenUserIdNull_throws() {
+        assertThatThrownBy(() -> service.getState(null))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("userId");
     }
 
     @Test
@@ -79,10 +81,11 @@ class SchoolBotUserStateServiceTest {
     }
 
     @Test
-    @DisplayName("setState: при null userId не вызывает репозиторий")
-    void setState_whenUserIdNull_doesNothing() {
-        service.setState(null, UserState.AWAITING_MODE);
-        verify(repository, never()).save(any());
+    @DisplayName("setState: при null userId выбрасывает ValidationException")
+    void setState_whenUserIdNull_throws() {
+        assertThatThrownBy(() -> service.setState(null, UserState.AWAITING_MODE))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("userId");
     }
 
     @Test
@@ -120,8 +123,10 @@ class SchoolBotUserStateServiceTest {
     }
 
     @Test
-    @DisplayName("isWaitingForInput: false при null userId")
-    void isWaitingForInput_whenUserIdNull_returnsFalse() {
-        assertThat(service.isWaitingForInput(null)).isFalse();
+    @DisplayName("isWaitingForInput: при null userId выбрасывает ValidationException")
+    void isWaitingForInput_whenUserIdNull_throws() {
+        assertThatThrownBy(() -> service.isWaitingForInput(null))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("userId");
     }
 }

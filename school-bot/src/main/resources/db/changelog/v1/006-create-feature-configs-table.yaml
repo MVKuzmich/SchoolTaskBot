@@ -1,0 +1,69 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-feature-configs-table
+      author: school-bot
+      comment: Конфигурация фич по тарифам (GATE/QUOTA) — управление без деплоя
+      changes:
+        - createTable:
+            tableName: feature_configs
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: feature_key
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tier
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: feature_type
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quota_limit
+                  type: INT
+              - column:
+                  name: quota_period
+                  type: VARCHAR(10)
+              - column:
+                  name: is_enabled
+                  type: BOOLEAN
+              - column:
+                  name: display_name
+                  type: VARCHAR(100)
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: feature_configs
+            columnNames: feature_key, tier
+            constraintName: uk_feature_configs_key_tier
+        - createIndex:
+            indexName: idx_feature_configs_key_tier
+            tableName: feature_configs
+            columns:
+              - column:
+                  name: feature_key
+              - column:
+                  name: tier

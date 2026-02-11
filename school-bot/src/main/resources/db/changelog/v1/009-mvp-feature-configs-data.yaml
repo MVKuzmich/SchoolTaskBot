@@ -1,0 +1,135 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-mvp-feature-configs-data
+      author: school-bot
+      comment: Начальная конфигурация MVP — все фичи доступны с щедрыми лимитами
+      changes:
+        - insert:
+            tableName: feature_configs
+            columns:
+              - column:
+                  name: feature_key
+                  value: PDF_GENERATION
+              - column:
+                  name: tier
+                  value: FREE
+              - column:
+                  name: feature_type
+                  value: QUOTA
+              - column:
+                  name: quota_limit
+                  valueNumeric: 999999
+              - column:
+                  name: quota_period
+                  value: DAY
+              - column:
+                  name: is_enabled
+                  valueBoolean: true
+              - column:
+                  name: display_name
+                  value: Генерация PDF
+        - insert:
+            tableName: feature_configs
+            columns:
+              - column:
+                  name: feature_key
+                  value: PDF_GENERATION
+              - column:
+                  name: tier
+                  value: PREMIUM
+              - column:
+                  name: feature_type
+                  value: QUOTA
+              - column:
+                  name: quota_period
+                  value: DAY
+              - column:
+                  name: is_enabled
+                  valueBoolean: true
+              - column:
+                  name: display_name
+                  value: Генерация PDF
+        - insert:
+            tableName: feature_configs
+            columns:
+              - column:
+                  name: feature_key
+                  value: EXAMPLE_COUNT
+              - column:
+                  name: tier
+                  value: FREE
+              - column:
+                  name: feature_type
+                  value: QUOTA
+              - column:
+                  name: quota_limit
+                  valueNumeric: 200
+              - column:
+                  name: quota_period
+                  value: TOTAL
+              - column:
+                  name: is_enabled
+                  valueBoolean: true
+              - column:
+                  name: display_name
+                  value: Количество примеров
+        - insert:
+            tableName: feature_configs
+            columns:
+              - column:
+                  name: feature_key
+                  value: EXAMPLE_COUNT
+              - column:
+                  name: tier
+                  value: PREMIUM
+              - column:
+                  name: feature_type
+                  value: QUOTA
+              - column:
+                  name: quota_limit
+                  valueNumeric: 200
+              - column:
+                  name: quota_period
+                  value: TOTAL
+              - column:
+                  name: is_enabled
+                  valueBoolean: true
+              - column:
+                  name: display_name
+                  value: Количество примеров
+        - insert:
+            tableName: feature_configs
+            columns:
+              - column:
+                  name: feature_key
+                  value: TRAINER
+              - column:
+                  name: tier
+                  value: FREE
+              - column:
+                  name: feature_type
+                  value: GATE
+              - column:
+                  name: is_enabled
+                  valueBoolean: true
+              - column:
+                  name: display_name
+                  value: Тренажёр
+        - insert:
+            tableName: feature_configs
+            columns:
+              - column:
+                  name: feature_key
+                  value: TRAINER
+              - column:
+                  name: tier
+                  value: PREMIUM
+              - column:
+                  name: feature_type
+                  value: GATE
+              - column:
+                  name: is_enabled
+                  valueBoolean: true
+              - column:
+                  name: display_name
+                  value: Тренажёр

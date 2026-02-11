@@ -1,5 +1,6 @@
 package com.kuzmich.schoolbot.context;
 
+import com.kuzmich.schoolbot.core.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,11 +55,11 @@ class SchoolBotUserContextServiceTest {
     }
 
     @Test
-    @DisplayName("getOrCreate: при null userId выбрасывает IllegalArgumentException")
+    @DisplayName("getOrCreate: при null userId выбрасывает ValidationException")
     void getOrCreate_whenUserIdNull_throws() {
         assertThatThrownBy(() -> service.getOrCreate(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("userId must not be null");
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("userId");
     }
 
     @Test
@@ -79,10 +80,11 @@ class SchoolBotUserContextServiceTest {
     }
 
     @Test
-    @DisplayName("save: при null context не вызывает репозиторий")
-    void save_whenContextNull_doesNothing() {
-        service.save(null);
-        verify(repository, never()).save(any());
+    @DisplayName("save: при null context выбрасывает ValidationException")
+    void save_whenContextNull_throws() {
+        assertThatThrownBy(() -> service.save(null))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageContaining("context");
     }
 
     @Test

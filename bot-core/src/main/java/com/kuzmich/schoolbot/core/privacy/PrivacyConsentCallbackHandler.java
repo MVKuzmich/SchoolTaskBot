@@ -2,12 +2,11 @@ package com.kuzmich.schoolbot.core.privacy;
 
 import com.kuzmich.schoolbot.core.handler.callback.CallbackQueryHandler;
 import com.kuzmich.schoolbot.core.service.PrivacyConsentService;
+import com.kuzmich.schoolbot.core.validation.Validation;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
-
-import java.util.Objects;
 
 /**
  * Обработчик нажатия кнопки «Согласен» на экране согласия.
@@ -22,7 +21,7 @@ public class PrivacyConsentCallbackHandler implements CallbackQueryHandler {
     public PrivacyConsentCallbackHandler(PrivacyConsentService privacyConsentService,
                                         AfterConsentHandler afterConsentHandler) {
         this.privacyConsentService = privacyConsentService;
-        this.afterConsentHandler = Objects.requireNonNull(afterConsentHandler, "afterConsentHandler");
+        this.afterConsentHandler = Validation.requireNonNull(afterConsentHandler, "afterConsentHandler");
     }
 
     @Override
@@ -37,6 +36,7 @@ public class PrivacyConsentCallbackHandler implements CallbackQueryHandler {
     @Override
     public void handle(TelegramClient client, Update update) {
         var callbackQuery = update.getCallbackQuery();
+        Validation.requireOneOf(callbackQuery.getData(), "callbackData", PrivacyConsentConstants.PRIVACY_CONSENT_ACCEPT);
         Long userId = callbackQuery.getFrom() != null ? callbackQuery.getFrom().getId() : null;
         Long chatId = callbackQuery.getMessage() != null ? callbackQuery.getMessage().getChatId() : null;
         String callbackQueryId = callbackQuery.getId();

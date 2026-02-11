@@ -1,9 +1,11 @@
 package com.kuzmich.schoolbot.handler;
 
+import com.kuzmich.schoolbot.core.i18n.StartMessageKeys;
 import com.kuzmich.schoolbot.core.service.MessageService;
 import com.kuzmich.schoolbot.core.service.UserContextService;
 import com.kuzmich.schoolbot.core.service.UserStateService;
 import com.kuzmich.schoolbot.context.UserContext;
+import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 import com.kuzmich.schoolbot.state.UserState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,11 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.context.MessageSource;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
-
-import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,15 +42,13 @@ class GeneratorCallbackHandlerTest {
     @Mock
     private UserContextService<UserContext> userContextService;
     @Mock
-    private MessageSource messageSource;
-    @Mock
     private TelegramClient client;
 
     private GeneratorCallbackHandler handler;
 
     @BeforeEach
     void setUp() {
-        handler = new GeneratorCallbackHandler(messageService, userStateService, userContextService, messageSource);
+        handler = new GeneratorCallbackHandler(messageService, userStateService, userContextService);
     }
 
     @Test
@@ -78,8 +75,8 @@ class GeneratorCallbackHandlerTest {
     @DisplayName("handle mode_generator: устанавливает режим, AWAITING_SCHOOL_LEVEL, отправляет клавиатуру класса")
     void handle_modeGenerator_setsContextAndShowsClassKeyboard() {
         var update = com.kuzmich.schoolbot.testutil.UpdateFactory.callbackUpdate(CHAT_ID, USER_ID, CallbackData.MODE_GENERATOR, QUERY_ID);
-        when(messageSource.getMessage(eq("button.back"), any(), eq(Locale.getDefault()))).thenReturn("◀️ Назад");
-        when(messageSource.getMessage(eq("button.help"), any(), eq(Locale.getDefault()))).thenReturn("ℹ️ Справка");
+        when(messageService.getText(GeneratorMessageKeys.BUTTON_BACK)).thenReturn("◀️ Назад");
+        when(messageService.getText(GeneratorMessageKeys.BUTTON_HELP)).thenReturn("ℹ️ Справка");
         UserContext ctx = new UserContext(USER_ID);
         when(userContextService.getOrCreate(USER_ID)).thenReturn(ctx);
 
@@ -88,7 +85,7 @@ class GeneratorCallbackHandlerTest {
         verify(userContextService).getOrCreate(USER_ID);
         verify(userContextService).save(ctx);
         verify(userStateService).setState(USER_ID, UserState.AWAITING_SCHOOL_LEVEL);
-        verify(messageService).sendFromKey(eq(client), eq(CHAT_ID), eq("generator.class.title"), any(InlineKeyboardMarkup.class));
+        verify(messageService).sendFromKey(eq(client), eq(CHAT_ID), eq(GeneratorMessageKeys.GENERATOR_CLASS_TITLE), any(InlineKeyboardMarkup.class));
     }
 
     @Test
@@ -99,6 +96,6 @@ class GeneratorCallbackHandlerTest {
         handler.handle(client, update);
 
         verify(userStateService).setState(USER_ID, UserState.AWAITING_MODE);
-        verify(messageService).sendFromKey(eq(client), eq(CHAT_ID), eq("start.message"), any(InlineKeyboardMarkup.class));
+        verify(messageService).sendFromKey(eq(client), eq(CHAT_ID), eq(StartMessageKeys.START_MESSAGE), any(InlineKeyboardMarkup.class));
     }
 }

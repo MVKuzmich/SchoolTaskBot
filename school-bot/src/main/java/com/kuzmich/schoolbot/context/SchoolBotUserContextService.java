@@ -1,6 +1,7 @@
 package com.kuzmich.schoolbot.context;
 
 import com.kuzmich.schoolbot.core.service.UserContextService;
+import com.kuzmich.schoolbot.core.validation.Validation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +22,7 @@ public class SchoolBotUserContextService implements UserContextService<UserConte
     @Override
     @Transactional(readOnly = true)
     public UserContext getOrCreate(Long userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("userId must not be null");
-        }
+        Validation.requireNonNull(userId, "userId");
         return repository.findByUserId(userId)
                 .map(mapper::toContext)
                 .orElseGet(() -> createAndSave(userId));
@@ -41,9 +40,8 @@ public class SchoolBotUserContextService implements UserContextService<UserConte
     @Override
     @Transactional
     public void save(UserContext context) {
-        if (context == null || context.getUserId() == null) {
-            return;
-        }
+        Validation.requireNonNull(context, "context");
+        Validation.requireNonNull(context.getUserId(), "context.userId");
         UserContextEntity entity = repository.findByUserId(context.getUserId())
                 .orElseGet(() -> new UserContextEntity(context.getUserId()));
         mapper.updateEntity(context, entity);

@@ -1,6 +1,7 @@
 package com.kuzmich.schoolbot.state;
 
 import com.kuzmich.schoolbot.core.service.UserStateService;
+import com.kuzmich.schoolbot.core.validation.Validation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +19,7 @@ public class SchoolBotUserStateService implements UserStateService {
     @Override
     @Transactional(readOnly = true)
     public Object getState(Long userId) {
-        if (userId == null) {
-            return UserState.INITIAL;
-        }
+        Validation.requireNonNull(userId, "userId");
         return repository.findByUserId(userId)
                 .map(UserStateEntity::getState)
                 .orElse(UserState.INITIAL);
@@ -29,9 +28,7 @@ public class SchoolBotUserStateService implements UserStateService {
     @Override
     @Transactional
     public void setState(Long userId, Object state) {
-        if (userId == null) {
-            return;
-        }
+        Validation.requireNonNull(userId, "userId");
         if (!(state instanceof UserState)) {
             return;
         }
@@ -45,9 +42,7 @@ public class SchoolBotUserStateService implements UserStateService {
     @Override
     @Transactional
     public void clearState(Long userId) {
-        if (userId == null) {
-            return;
-        }
+        Validation.requireNonNull(userId, "userId");
         repository.findByUserId(userId).ifPresent(entity -> {
             entity.setState(UserState.INITIAL);
             repository.save(entity);
@@ -58,9 +53,7 @@ public class SchoolBotUserStateService implements UserStateService {
     @Override
     @Transactional(readOnly = true)
     public boolean isWaitingForInput(Long userId) {
-        if (userId == null) {
-            return false;
-        }
+        Validation.requireNonNull(userId, "userId");
         UserState state = repository.findByUserId(userId)
                 .map(UserStateEntity::getState)
                 .orElse(UserState.INITIAL);

@@ -6,14 +6,13 @@ import com.kuzmich.schoolbot.core.privacy.ConsentGate;
 import com.kuzmich.schoolbot.core.service.MessageService;
 import com.kuzmich.schoolbot.core.service.UserContextService;
 import com.kuzmich.schoolbot.core.service.UserStateService;
+import com.kuzmich.schoolbot.core.validation.Validation;
 import com.kuzmich.schoolbot.context.UserContext;
 import com.kuzmich.schoolbot.state.UserState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
-
-import java.util.Objects;
 
 /**
  * Обработчик команды /start: проверка согласия на обработку ПД, при отсутствии — экран согласия;
@@ -43,7 +42,8 @@ public class StartCommandHandler implements CommandHandler {
 
     @Override
     public void handle(TelegramClient client, Update update) {
-        Long chatId = Objects.requireNonNull(update.getMessage().getChatId(), "chatId");
+        Validation.requireStartsWith(update.getMessage().getText(), COMMAND_START, "command");
+        Long chatId = Validation.requireNonNull(update.getMessage().getChatId(), "chatId");
         Long userId = update.getMessage().getFrom() != null
                 ? update.getMessage().getFrom().getId()
                 : null;

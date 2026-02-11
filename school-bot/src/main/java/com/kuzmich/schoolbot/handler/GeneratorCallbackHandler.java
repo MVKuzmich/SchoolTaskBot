@@ -2,23 +2,22 @@ package com.kuzmich.schoolbot.handler;
 
 import com.kuzmich.schoolbot.context.UserContext;
 import com.kuzmich.schoolbot.core.handler.callback.CallbackQueryHandler;
+import com.kuzmich.schoolbot.core.i18n.StartMessageKeys;
 import com.kuzmich.schoolbot.core.service.MessageService;
 import com.kuzmich.schoolbot.core.service.UserContextService;
 import com.kuzmich.schoolbot.core.service.UserStateService;
+import com.kuzmich.schoolbot.core.validation.Validation;
 import com.kuzmich.schoolbot.domain.Mode;
+import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 import com.kuzmich.schoolbot.domain.SchoolLevel;
 import com.kuzmich.schoolbot.domain.Subject;
 import com.kuzmich.schoolbot.state.UserState;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
-
-import java.util.Locale;
-import java.util.Objects;
 
 /**
  * Обработчик callback от inline-кнопок сценария генератора: выбор режима, класса, предмета,
@@ -28,23 +27,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class GeneratorCallbackHandler implements CallbackQueryHandler {
 
-    private static final String MESSAGE_KEY_START = "start.message";
-    private static final String MESSAGE_KEY_GENERATOR_CLASS = "generator.class.title";
-    private static final String MESSAGE_KEY_GENERATOR_SUBJECT = "generator.subject.title";
-    private static final String MESSAGE_KEY_TRAINER_COMING_SOON = "trainer.coming.soon";
-    private static final String MESSAGE_KEY_BUTTON_BACK = "button.back";
-    private static final String MESSAGE_KEY_BUTTON_MENU = "button.menu";
-    private static final String MESSAGE_KEY_BUTTON_HELP = "button.help";
-    private static final String MESSAGE_KEY_CLASS_ELEMENTARY = "generator.class.elementary";
-    private static final String MESSAGE_KEY_CLASS_SECONDARY = "generator.class.secondary";
-    private static final String MESSAGE_KEY_SUBJECT_MATH = "generator.subject.math";
-    private static final String MESSAGE_KEY_TOPIC_COMING = "generator.topic.coming";
-    private static final String MESSAGE_KEY_HELP = "help.message";
-
     private final MessageService messageService;
     private final UserStateService userStateService;
     private final UserContextService<UserContext> userContextService;
-    private final MessageSource messageSource;
 
     @Override
     public boolean canHandle(Update update) {
@@ -63,7 +48,10 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
 
     @Override
     public void handle(TelegramClient client, Update update) {
-        String data = Objects.requireNonNull(update.getCallbackQuery().getData(), "callback data");
+        String data = Validation.requireOneOf(update.getCallbackQuery().getData(), "callbackData",
+                CallbackData.MODE_GENERATOR, CallbackData.MODE_TRAINER, CallbackData.GEN_ELEMENTARY,
+                CallbackData.GEN_SECONDARY, CallbackData.SUBJECT_MATH, CallbackData.BACK_TO_MODE,
+                CallbackData.BACK_TO_CLASS, CallbackData.MENU, "help");
         Long chatId = update.getCallbackQuery().getMessage() != null
                 ? update.getCallbackQuery().getMessage().getChatId()
                 : null;
@@ -88,7 +76,7 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
             case CallbackData.BACK_TO_MODE -> handleBackToMode(client, chatId, userId);
             case CallbackData.BACK_TO_CLASS -> handleBackToClass(client, chatId, userId);
             case CallbackData.MENU -> handleMenu(client, chatId, userId);
-            default -> handleHelp(client, chatId, userId);
+            default -> handleHelp(client, chatId);
         }
     }
 
@@ -105,24 +93,20 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
         }
     }
 
-    private String msg(String key, Object... args) {
-        return messageSource.getMessage(key, args, Locale.getDefault());
-    }
-
     private void handleModeGenerator(TelegramClient client, Long chatId, Long userId) {
         UserContext ctx = userContextService.getOrCreate(userId);
         ctx.setMode(Mode.GENERATOR);
         userContextService.save(ctx);
         userStateService.setState(userId, UserState.AWAITING_SCHOOL_LEVEL);
-        String back = msg(MESSAGE_KEY_BUTTON_BACK);
-        String help = msg(MESSAGE_KEY_BUTTON_HELP);
-        messageService.sendFromKey(client, chatId, MESSAGE_KEY_GENERATOR_CLASS,
+        String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
+        String help = messageService.getText(GeneratorMessageKeys.BUTTON_HELP);
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.GENERATOR_CLASS_TITLE,
                 GeneratorKeyboardFactory.classSelectionKeyboard(back, help));
     }
 
     private void handleModeTrainer(TelegramClient client, Long chatId) {
-        messageService.sendFromKey(client, chatId, MESSAGE_KEY_TRAINER_COMING_SOON,
-                GeneratorKeyboardFactory.mainMenuOnlyKeyboard(msg(MESSAGE_KEY_BUTTON_MENU)));
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.TRAINER_COMING_SOON,
+                GeneratorKeyboardFactory.mainMenuOnlyKeyboard(messageService.getText(GeneratorMessageKeys.BUTTON_MENU)));
     }
 
     private void handleGenElementary(TelegramClient client, Long chatId, Long userId) {
@@ -130,7 +114,7 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
         ctx.setSchoolLevel(SchoolLevel.ELEMENTARY);
         userContextService.save(ctx);
         userStateService.setState(userId, UserState.AWAITING_SUBJECT);
-        showSubjectSelection(client, chatId, msg(MESSAGE_KEY_CLASS_ELEMENTARY));
+        showSubjectSelection(client, chatId, messageService.getText(GeneratorMessageKeys.CLASS_ELEMENTARY));
     }
 
     private void handleGenSecondary(TelegramClient client, Long chatId, Long userId) {
@@ -138,14 +122,14 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
         ctx.setSchoolLevel(SchoolLevel.SECONDARY);
         userContextService.save(ctx);
         userStateService.setState(userId, UserState.AWAITING_SUBJECT);
-        showSubjectSelection(client, chatId, msg(MESSAGE_KEY_CLASS_SECONDARY));
+        showSubjectSelection(client, chatId, messageService.getText(GeneratorMessageKeys.CLASS_SECONDARY));
     }
 
     private void showSubjectSelection(TelegramClient client, Long chatId, String schoolLevelLabel) {
-        String mathLabel = msg(MESSAGE_KEY_SUBJECT_MATH);
-        String back = msg(MESSAGE_KEY_BUTTON_BACK);
-        String menu = msg(MESSAGE_KEY_BUTTON_MENU);
-        messageService.sendFromKey(client, chatId, MESSAGE_KEY_GENERATOR_SUBJECT,
+        String mathLabel = messageService.getText(GeneratorMessageKeys.SUBJECT_MATH);
+        String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
+        String menu = messageService.getText(GeneratorMessageKeys.BUTTON_MENU);
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.GENERATOR_SUBJECT_TITLE,
                 GeneratorKeyboardFactory.subjectSelectionKeyboard(mathLabel, back, menu),
                 schoolLevelLabel);
     }
@@ -155,8 +139,8 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
         ctx.setSubject(Subject.MATH);
         userContextService.save(ctx);
         userStateService.setState(userId, UserState.AWAITING_TOPIC);
-        messageService.sendFromKey(client, chatId, MESSAGE_KEY_TOPIC_COMING,
-                GeneratorKeyboardFactory.mainMenuOnlyKeyboard(msg(MESSAGE_KEY_BUTTON_MENU)));
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.TOPIC_COMING,
+                GeneratorKeyboardFactory.mainMenuOnlyKeyboard(messageService.getText(GeneratorMessageKeys.BUTTON_MENU)));
     }
 
     private void handleBackToMode(TelegramClient client, Long chatId, Long userId) {
@@ -165,9 +149,9 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
 
     private void handleBackToClass(TelegramClient client, Long chatId, Long userId) {
         userStateService.setState(userId, UserState.AWAITING_SCHOOL_LEVEL);
-        String back = msg(MESSAGE_KEY_BUTTON_BACK);
-        String help = msg(MESSAGE_KEY_BUTTON_HELP);
-        messageService.sendFromKey(client, chatId, MESSAGE_KEY_GENERATOR_CLASS,
+        String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
+        String help = messageService.getText(GeneratorMessageKeys.BUTTON_HELP);
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.GENERATOR_CLASS_TITLE,
                 GeneratorKeyboardFactory.classSelectionKeyboard(back, help));
     }
 
@@ -177,12 +161,12 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
 
     private void showModeSelection(TelegramClient client, Long chatId, Long userId) {
         userStateService.setState(userId, UserState.AWAITING_MODE);
-        messageService.sendFromKey(client, chatId, MESSAGE_KEY_START,
+        messageService.sendFromKey(client, chatId, StartMessageKeys.START_MESSAGE,
                 GeneratorKeyboardFactory.modeSelectionKeyboard());
     }
 
-    private void handleHelp(TelegramClient client, Long chatId, Long userId) {
-        messageService.sendFromKey(client, chatId, MESSAGE_KEY_HELP,
-                GeneratorKeyboardFactory.mainMenuOnlyKeyboard(msg(MESSAGE_KEY_BUTTON_MENU)));
+    private void handleHelp(TelegramClient client, Long chatId) {
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.HELP_MESSAGE,
+                GeneratorKeyboardFactory.mainMenuOnlyKeyboard(messageService.getText(GeneratorMessageKeys.BUTTON_MENU)));
     }
 }

@@ -1,12 +1,12 @@
 package com.kuzmich.schoolbot.context;
 
+import com.kuzmich.schoolbot.core.validation.Validation;
 import com.kuzmich.schoolbot.domain.Mode;
 import com.kuzmich.schoolbot.domain.SchoolLevel;
 import com.kuzmich.schoolbot.domain.Subject;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 /**
  * Контекст пользователя — «что выбрал пользователь» в текущей сессии.
@@ -33,7 +33,7 @@ public class UserContext {
     private LocalDateTime registeredAt;
 
     public UserContext(Long userId) {
-        this.userId = Objects.requireNonNull(userId, "userId");
+        this.userId = Validation.requireNonNull(userId, "userId");
         this.registeredAt = LocalDateTime.now();
         this.lastActivity = LocalDateTime.now();
     }

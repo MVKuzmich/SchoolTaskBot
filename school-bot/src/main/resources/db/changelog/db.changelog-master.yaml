@@ -5,3 +5,15 @@ databaseChangeLog:
       file: classpath:db/changelog/v1/002-create-user-context-table.yaml
   - include:
       file: classpath:db/changelog/v1/003-add-privacy-consent-fields.yaml
+  - include:
+      file: classpath:db/changelog/v1/004-create-subscriptions-table.yaml
+  - include:
+      file: classpath:db/changelog/v1/005-create-generation-limits-table.yaml
+  - include:
+      file: classpath:db/changelog/v1/006-create-feature-configs-table.yaml
+  - include:
+      file: classpath:db/changelog/v1/007-create-user-quotas-table.yaml
+  - include:
+      file: classpath:db/changelog/v1/008-create-feature-config-audit-table.yaml
+  - include:
+      file: classpath:db/changelog/v1/009-mvp-feature-configs-data.yaml

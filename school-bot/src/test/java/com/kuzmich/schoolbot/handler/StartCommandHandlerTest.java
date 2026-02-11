@@ -92,6 +92,7 @@ class StartCommandHandlerTest {
         var message = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.message.Message.class);
         var from = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.User.class);
         org.mockito.Mockito.when(update.getMessage()).thenReturn(message);
+        org.mockito.Mockito.when(message.getText()).thenReturn("/start");
         org.mockito.Mockito.when(message.getChatId()).thenReturn(CHAT_ID);
         org.mockito.Mockito.when(message.getFrom()).thenReturn(from);
         org.mockito.Mockito.when(from.getId()).thenReturn(USER_ID);
@@ -113,6 +114,7 @@ class StartCommandHandlerTest {
         var message = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.message.Message.class);
         var from = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.User.class);
         org.mockito.Mockito.when(update.getMessage()).thenReturn(message);
+        org.mockito.Mockito.when(message.getText()).thenReturn("/start");
         org.mockito.Mockito.when(message.getChatId()).thenReturn(CHAT_ID);
         org.mockito.Mockito.when(message.getFrom()).thenReturn(from);
         org.mockito.Mockito.when(from.getId()).thenReturn(USER_ID);
@@ -130,6 +132,7 @@ class StartCommandHandlerTest {
         var update = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.Update.class);
         var message = org.mockito.Mockito.mock(org.telegram.telegrambots.meta.api.objects.message.Message.class);
         org.mockito.Mockito.when(update.getMessage()).thenReturn(message);
+        org.mockito.Mockito.when(message.getText()).thenReturn("/start");
         org.mockito.Mockito.when(message.getChatId()).thenReturn(CHAT_ID);
         org.mockito.Mockito.when(message.getFrom()).thenReturn(null);
 

@@ -3,10 +3,9 @@ package com.kuzmich.schoolbot.core.privacy;
 import com.kuzmich.schoolbot.core.handler.command.CommandHandler;
 import com.kuzmich.schoolbot.core.service.MessageService;
 import com.kuzmich.schoolbot.core.service.PrivacyConsentService;
+import com.kuzmich.schoolbot.core.validation.Validation;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
-
-import java.util.Objects;
 
 /**
  * Обработчик команды /privacy: отправляет пользователю ссылку на политику конфиденциальности.
@@ -26,7 +25,7 @@ public class PrivacyCommandHandler implements CommandHandler {
                                  String privacyMessageKey) {
         this.privacyConsentService = privacyConsentService;
         this.messageService = messageService;
-        this.privacyMessageKey = Objects.requireNonNull(privacyMessageKey, "privacyMessageKey");
+        this.privacyMessageKey = Validation.requireNonNull(privacyMessageKey, "privacyMessageKey");
     }
 
     @Override
@@ -39,7 +38,8 @@ public class PrivacyCommandHandler implements CommandHandler {
 
     @Override
     public void handle(TelegramClient client, Update update) {
-        Long chatId = Objects.requireNonNull(update.getMessage().getChatId(), "chatId");
+        Validation.requireOneOf(update.getMessage().getText(), "command", COMMAND_PRIVACY);
+        Long chatId = Validation.requireNonNull(update.getMessage().getChatId(), "chatId");
         String url = privacyConsentService.getPrivacyPolicyUrl();
         messageService.sendFromKey(client, chatId, privacyMessageKey, url);
     }

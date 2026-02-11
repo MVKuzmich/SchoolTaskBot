@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-create-user-quotas-table
+      author: school-bot
+      comment: Использование квот по фичам и пользователям за период
+      changes:
+        - createTable:
+            tableName: user_quotas
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: feature_key
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: usage_count
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: period_start
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: period_end
+                  type: TIMESTAMP
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_user_quotas_user_feature_period
+            tableName: user_quotas
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: feature_key
+              - column:
+                  name: period_start
+        - addUniqueConstraint:
+            tableName: user_quotas
+            columnNames: user_id, feature_key, period_start
+            constraintName: uk_user_quotas_user_feature_period
+        - createIndex:
+            indexName: idx_user_quotas_user_id
+            tableName: user_quotas
+            columns:
+              - column:
+                  name: user_id

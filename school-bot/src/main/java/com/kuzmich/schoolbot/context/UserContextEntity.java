@@ -1,5 +1,6 @@
 package com.kuzmich.schoolbot.context;
 
+import com.kuzmich.schoolbot.core.validation.Validation;
 import com.kuzmich.schoolbot.domain.Mode;
 import com.kuzmich.schoolbot.domain.SchoolLevel;
 import com.kuzmich.schoolbot.domain.Subject;
@@ -15,7 +16,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 /**
  * Сущность JPA для хранения контекста пользователя в PostgreSQL.
@@ -72,7 +72,7 @@ public class UserContextEntity {
     private String privacyPolicyVersion;
 
     public UserContextEntity(Long userId) {
-        this.userId = Objects.requireNonNull(userId, "userId");
+        this.userId = Validation.requireNonNull(userId, "userId");
         this.registeredAt = LocalDateTime.now();
         this.lastActivity = LocalDateTime.now();
     }

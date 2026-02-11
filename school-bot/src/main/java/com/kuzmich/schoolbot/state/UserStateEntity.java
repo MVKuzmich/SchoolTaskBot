@@ -1,5 +1,6 @@
 package com.kuzmich.schoolbot.state;
 
+import com.kuzmich.schoolbot.core.validation.Validation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,7 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 /**
  * Сущность JPA для хранения состояния пользователя в PostgreSQL.
@@ -35,13 +35,13 @@ public class UserStateEntity {
     private LocalDateTime stateSetAt;
 
     public UserStateEntity(Long userId, UserState state) {
-        this.userId = Objects.requireNonNull(userId, "userId");
-        this.state = Objects.requireNonNull(state, "state");
+        this.userId = Validation.requireNonNull(userId, "userId");
+        this.state = Validation.requireNonNull(state, "state");
         this.stateSetAt = LocalDateTime.now();
     }
 
     public void setState(UserState state) {
-        this.state = Objects.requireNonNull(state, "state");
+        this.state = Validation.requireNonNull(state, "state");
         this.stateSetAt = LocalDateTime.now();
     }
 }

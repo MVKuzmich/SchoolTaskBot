@@ -17,8 +17,10 @@ public interface UserContextMapper {
     UserContext toContext(UserContextEntity entity);
 
     /**
-     * Скопировать поля контекста в сущность (без изменения userId).
+     * Скопировать поля контекста в сущность (без изменения userId и полей согласия с политикой).
      */
     @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "privacyConsentAt", ignore = true)
+    @Mapping(target = "privacyPolicyVersion", ignore = true)
     void updateEntity(UserContext context, @MappingTarget UserContextEntity entity);
 }
