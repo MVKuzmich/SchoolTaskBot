@@ -73,11 +73,12 @@ class GeneratorFactoryTest {
 
         List<Task> tasks = gen.generate(context);
 
-        assertThat(tasks).hasSize(15);
-        assertThat(tasks).allMatch(t -> {
-            int answer = Integer.parseInt(t.answer());
-            return answer >= 0 && answer <= 10;
-        });
+        assertThat(tasks)
+                .hasSize(15)
+                .allMatch(t -> {
+                    int answer = Integer.parseInt(t.answer());
+                    return answer >= 0 && answer <= 10;
+                });
         assertThat(tasks.get(0).question()).contains("+");
     }
 
@@ -103,8 +104,9 @@ class GeneratorFactoryTest {
 
         List<Task> tasks = gen.generate(context);
 
-        assertThat(tasks).hasSize(15);
-        assertThat(tasks).allMatch(t -> Integer.parseInt(t.answer()) >= 0);
+        assertThat(tasks)
+                .hasSize(15)
+                .allMatch(t -> Integer.parseInt(t.answer()) >= 0);
         assertThat(tasks.get(0).question()).contains("-");
     }
 
@@ -130,14 +132,15 @@ class GeneratorFactoryTest {
 
         List<Task> tasks = gen.generate(context);
 
-        assertThat(tasks).hasSize(10);
-        assertThat(tasks).allMatch(t -> {
-            String q = t.question();
-            String[] parts = q.replace(" = __", "").split(" \\+ ");
-            int a = Integer.parseInt(parts[0].trim());
-            int b = Integer.parseInt(parts[1].trim());
-            return (a % 10) + (b % 10) < 10;
-        });
+        assertThat(tasks)
+                .hasSize(10)
+                .allMatch(t -> {
+                    String q = t.question();
+                    String[] parts = q.replace(" = __", "").split(" \\+ ");
+                    int a = Integer.parseInt(parts[0].trim());
+                    int b = Integer.parseInt(parts[1].trim());
+                    return (a % 10) + (b % 10) < 10;
+                });
     }
 
     @Test
@@ -162,13 +165,14 @@ class GeneratorFactoryTest {
 
         List<Task> tasks = gen.generate(context);
 
-        assertThat(tasks).hasSize(10);
-        assertThat(tasks).allMatch(t -> {
-            String q = t.question();
-            String[] parts = q.replace(" = __", "").split(" - ");
-            int a = Integer.parseInt(parts[0].trim());
-            int b = Integer.parseInt(parts[1].trim());
-            return (a % 10) >= (b % 10) && Integer.parseInt(t.answer()) >= 0;
-        });
+        assertThat(tasks)
+                .hasSize(10)
+                .allMatch(t -> {
+                    String q = t.question();
+                    String[] parts = q.replace(" = __", "").split(" - ");
+                    int a = Integer.parseInt(parts[0].trim());
+                    int b = Integer.parseInt(parts[1].trim());
+                    return (a % 10) >= (b % 10) && Integer.parseInt(t.answer()) >= 0;
+                });
     }
 }

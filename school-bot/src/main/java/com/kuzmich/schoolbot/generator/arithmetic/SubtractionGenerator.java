@@ -1,6 +1,5 @@
 package com.kuzmich.schoolbot.generator.arithmetic;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -39,26 +38,84 @@ public class SubtractionGenerator implements ArithmeticTaskGenerator {
         Validation.requireNonNull(context, "context");
         ArithmeticContext ctx = (ArithmeticContext) context;
         ctx.validate();
-
         int quantity = ctx.getQuantity();
         if (quantity == 0) {
             return List.of();
         }
 
         Range range = ctx.getNumberRange();
-        int min = range.min();
-        int max = range.max();
-        List<Task> tasks = new ArrayList<>(quantity);
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
 
-        for (int i = 0; i < quantity; i++) {
-            int a = min + rnd.nextInt(max - min + 1);
-            int b = rnd.nextInt(a + 1);
-            int answer = a - b;
-            String question = messageService.getText(GeneratorMessageKeys.QUESTION_FORMAT_SUBTRACTION, a, b);
-            tasks.add(new Task(question, String.valueOf(answer)));
-        }
+        List<ArithmeticGenerationUtils.Candidate> domain = enumerateDomain(range);
+        List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> levels =
+                buildRelaxationLevels();
 
-        return tasks;
+        return ArithmeticGenerationUtils.generateWithRelaxation(
+                domain,
+                quantity,
+                levels,
+                rnd,
+                candidate -> {
+                    String question = messageService.getText(
+                            GeneratorMessageKeys.QUESTION_FORMAT_SUBTRACTION,
+                            candidate.a(),
+                            candidate.b()
+                    );
+                    return new Task(question, String.valueOf(candidate.answer()));
+                }
+        );
+    }
+
+    /**
+     * Перечисляет весь домен допустимых примеров на вычитание:
+     * a ∈ [min, max], b ∈ [0, a], ответ a - b (неотрицательный).
+     */
+    private List<ArithmeticGenerationUtils.Candidate> enumerateDomain(Range range) {
+        int min = range.min();
+        int max = range.max();
+        List<ArithmeticGenerationUtils.Candidate> domain = new java.util.ArrayList<>();
+        for (int a = min; a <= max; a++) {
+            for (int b = 0; b <= a; b++) {
+                int answer = a - b;
+                String key = a + "-" + b;
+                domain.add(new ArithmeticGenerationUtils.Candidate(a, b, answer, key));
+            }
+        }
+        return domain;
+    }
+
+    /**
+     * Описывает уровни "ослабления" ограничений для вычитания.
+     * <p>
+     * Идея:
+     * <ul>
+     *     <li>L0 — максимально "интересные" примеры без нулей и единиц в операндах и ответе.</li>
+     *     <li>L1 — разрешаем ответ 1, но операнды остаются ≥ 2.</li>
+     *     <li>L2 — разрешаем b = 1, но запрещаем ответ 0.</li>
+     *     <li>L3 — разрешаем b = 0, но по возможности избегаем ответа 0.</li>
+     *     <li>L4 — самый мягкий уровень: любые неотрицательные ответы.</li>
+     * </ul>
+     * Такой порядок даёт контролируемое "размягчение" качества листа, если строгих примеров не хватает.
+     */
+    private List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> buildRelaxationLevels() {
+        java.util.List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> levels =
+                new java.util.ArrayList<>();
+
+        // L0: a >= 2, b >= 2, answer >= 2
+        levels.add(c -> c.a() >= 2 && c.b() >= 2 && c.answer() >= 2);
+
+        // L1: a >= 2, b >= 2, answer >= 1 (разрешаем ответ 1)
+        levels.add(c -> c.a() >= 2 && c.b() >= 2 && c.answer() >= 1);
+
+        // L2: a >= 2, b >= 1, answer >= 1 (разрешаем b = 1)
+        levels.add(c -> c.a() >= 2 && c.b() >= 1 && c.answer() >= 1);
+
+        // L3: a >= 2, answer >= 1 (разрешаем b = 0, но избегаем ответа 0)
+        levels.add(c -> c.a() >= 2 && c.answer() >= 1);
+
+        // L4: самый мягкий уровень — любые неотрицательные ответы
+        levels.add(c -> c.answer() >= 0);
+
+        return levels;
     }
 }

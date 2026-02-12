@@ -17,7 +17,9 @@ import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 
 /**
  * Генератор примеров на вычитание в пределах 20 без перехода через десяток.
- * Алгоритм: единицы a >= единицы b; результат неотрицательный.
+ * Использует домен + уровни ослабления + квоты и двухпроходный отбор
+ * ({@link ArithmeticGenerationUtils}).
+ * Домен: a ∈ [0, 19], b ∈ [0, a mod 10] (единицы a ≥ единицы b), ответ a − b.
  */
 @Component
 public class Subtraction20NoCarryGenerator implements ArithmeticTaskGenerator {
@@ -44,20 +46,67 @@ public class Subtraction20NoCarryGenerator implements ArithmeticTaskGenerator {
             return List.of();
         }
 
-        List<Task> tasks = new ArrayList<>(quantity);
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
 
-        for (int i = 0; i < quantity; i++) {
-            int d = rnd.nextBoolean() ? 0 : 10;
-            int aUnits = rnd.nextInt(10);
-            int bUnits = rnd.nextInt(aUnits + 1);
-            int a = d + aUnits;
-            int b = bUnits;
-            int answer = a - b;
-            String question = messageService.getText(GeneratorMessageKeys.QUESTION_FORMAT_SUBTRACTION, a, b);
-            tasks.add(new Task(question, String.valueOf(answer)));
-        }
+        List<ArithmeticGenerationUtils.Candidate> domain = enumerateDomain();
+        List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> levels =
+                buildRelaxationLevels();
 
-        return tasks;
+        return ArithmeticGenerationUtils.generateWithRelaxation(
+                domain,
+                quantity,
+                levels,
+                rnd,
+                candidate -> {
+                    String question = messageService.getText(
+                            GeneratorMessageKeys.QUESTION_FORMAT_SUBTRACTION,
+                            candidate.a(),
+                            candidate.b()
+                    );
+                    return new Task(question, String.valueOf(candidate.answer()));
+                }
+        );
+    }
+
+    /**
+     * Перечисляет домен: вычитание в пределах 20 без перехода (без заёма в единицах).
+     * a ∈ [0, 19], b ∈ [0, a mod 10], ответ a − b.
+     */
+    private List<ArithmeticGenerationUtils.Candidate> enumerateDomain() {
+        List<ArithmeticGenerationUtils.Candidate> domain = new ArrayList<>();
+        for (int a = 0; a <= 19; a++) {
+            int bMax = a % 10;
+            for (int b = 0; b <= bMax; b++) {
+                int answer = a - b;
+                String key = a + "-" + b;
+                domain.add(new ArithmeticGenerationUtils.Candidate(a, b, answer, key));
+            }
+        }
+        return domain;
+    }
+
+    /**
+     * Уровни ослабления: приоритет примерам без 0 и 1 в операндах и ответе.
+     */
+    private List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> buildRelaxationLevels() {
+        List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> levels =
+                new ArrayList<>();
+
+        // L0: a >= 2, b >= 2, answer >= 2
+        levels.add(c -> c.a() >= 2 && c.b() >= 2 && c.answer() >= 2);
+
+        // L1: a >= 2, b >= 2, answer >= 1
+        levels.add(c -> c.a() >= 2 && c.b() >= 2 && c.answer() >= 1);
+
+        // L2: a >= 2, b >= 1, answer >= 1
+        levels.add(c -> c.a() >= 2 && c.b() >= 1 && c.answer() >= 1);
+
+        // L3: a >= 2, answer >= 1 (разрешаем b = 0)
+        levels.add(c -> c.a() >= 2 && c.answer() >= 1);
+
+        // L4: любые неотрицательные из домена
+        levels.add(c -> c.answer() >= 0);
+
+        return levels;
     }
 }

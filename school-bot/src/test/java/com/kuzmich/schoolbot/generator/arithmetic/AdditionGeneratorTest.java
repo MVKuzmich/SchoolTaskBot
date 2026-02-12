@@ -85,14 +85,16 @@ class AdditionGeneratorTest {
 
             List<Task> tasks = generator.generate(context);
 
-            assertThat(tasks).allMatch(task -> {
-                String question = task.question();
-                int answer = Integer.parseInt(task.answer());
-                String[] parts = question.replace(" = __", "").split(" \\+ ");
-                int a = Integer.parseInt(parts[0].trim());
-                int b = Integer.parseInt(parts[1].trim());
-                return a + b == answer;
-            });
+            assertThat(tasks)
+                    .isNotEmpty()
+                    .allMatch(task -> {
+                        String question = task.question();
+                        int answer = Integer.parseInt(task.answer());
+                        String[] parts = question.replace(" = __", "").split(" \\+ ");
+                        int a = Integer.parseInt(parts[0].trim());
+                        int b = Integer.parseInt(parts[1].trim());
+                        return a + b == answer;
+                    });
         }
 
         @Test
@@ -109,9 +111,15 @@ class AdditionGeneratorTest {
             assertThat(tasks).isEmpty();
         }
 
+        /** Размер домена сложения 0..10: a∈[0,10], b∈[0,10-a] → 66 уникальных пар. */
+        private static final int ADDITION_DOMAIN_SIZE_0_10 = 66;
+
         @Test
-        @DisplayName("quantity = 200 возвращает 200 заданий в диапазоне")
-        void shouldGenerate200Tasks_whenQuantity200() {
+        @DisplayName("при quantity больше размера домена возвращает все уникальные примеры (без дублей)")
+        void shouldGenerateAtMostDomainSize_whenQuantity200() {
+            when(messageService.getText(anyString(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = __");
+
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.ADDITION_10)
                     .numberRange(new Range(0, 10))
@@ -120,11 +128,14 @@ class AdditionGeneratorTest {
 
             List<Task> tasks = generator.generate(context);
 
-            assertThat(tasks).hasSize(200);
-            assertThat(tasks).allMatch(task -> {
-                int answer = Integer.parseInt(task.answer());
-                return answer >= 0 && answer <= 10;
-            });
+            assertThat(tasks)
+                    .hasSizeLessThanOrEqualTo(ADDITION_DOMAIN_SIZE_0_10)
+                    .allMatch(task -> {
+                        int answer = Integer.parseInt(task.answer());
+                        return answer >= 0 && answer <= 10;
+                    });
+            long distinctQuestions = tasks.stream().map(Task::question).distinct().count();
+            assertThat(distinctQuestions).isEqualTo(tasks.size());
         }
 
         @Test
@@ -147,8 +158,8 @@ class AdditionGeneratorTest {
         }
 
         @Test
-        @DisplayName("при quantity = 100 допускаются повторы")
-        void shouldAllowDuplicates_whenQuantity100() {
+        @DisplayName("при quantity = 100 возвращает только уникальные примеры (не больше размера домена)")
+        void shouldReturnOnlyUnique_whenQuantity100() {
             when(messageService.getText(anyString(), any(), any()))
                     .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = __");
 
@@ -160,10 +171,9 @@ class AdditionGeneratorTest {
 
             List<Task> tasks = generator.generate(context);
 
-            assertThat(tasks).hasSize(100);
-            // При 100 заданиях в диапазоне 0–10 уникальных комбинаций меньше 100, значит будут повторы
+            assertThat(tasks).hasSizeLessThanOrEqualTo(ADDITION_DOMAIN_SIZE_0_10);
             long distinctQuestions = tasks.stream().map(Task::question).distinct().count();
-            assertThat(distinctQuestions).isLessThanOrEqualTo(100);
+            assertThat(distinctQuestions).isEqualTo(tasks.size());
         }
     }
 }

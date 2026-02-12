@@ -1,9 +1,7 @@
 package com.kuzmich.schoolbot.generator.arithmetic;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.stereotype.Component;
@@ -11,16 +9,18 @@ import org.springframework.stereotype.Component;
 import com.kuzmich.schoolbot.core.service.MessageService;
 import com.kuzmich.schoolbot.core.validation.Validation;
 import com.kuzmich.schoolbot.generator.ArithmeticContext;
-import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 import com.kuzmich.schoolbot.generator.ArithmeticTaskGenerator;
 import com.kuzmich.schoolbot.generator.GenerationContext;
 import com.kuzmich.schoolbot.generator.OperationType;
 import com.kuzmich.schoolbot.generator.Range;
 import com.kuzmich.schoolbot.generator.Task;
+import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 
 /**
  * Генератор примеров на сложение в пределах заданного максимума (например 10).
- * Алгоритм: a ∈ [min, max], b ∈ [0, max - a], ответ a + b; вопрос в формате «a + b = __».
+ * Использует домен + уровни ослабления + квоты и двухпроходный отбор
+ * ({@link ArithmeticGenerationUtils}).
+ * Домен: a ∈ [min, max], b ∈ [0, max - a], ответ a + b; вопрос «a + b = __».
  */
 @Component
 public class AdditionGenerator implements ArithmeticTaskGenerator {
@@ -48,44 +48,70 @@ public class AdditionGenerator implements ArithmeticTaskGenerator {
         }
 
         Range range = ctx.getNumberRange();
+        ThreadLocalRandom rnd = ThreadLocalRandom.current();
+
+        List<ArithmeticGenerationUtils.Candidate> domain = enumerateDomain(range);
+        List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> levels =
+                buildRelaxationLevels();
+
+        return ArithmeticGenerationUtils.generateWithRelaxation(
+                domain,
+                quantity,
+                levels,
+                rnd,
+                candidate -> {
+                    String question = messageService.getText(
+                            GeneratorMessageKeys.QUESTION_FORMAT_ADDITION,
+                            candidate.a(),
+                            candidate.b()
+                    );
+                    return new Task(question, String.valueOf(candidate.answer()));
+                }
+        );
+    }
+
+    /**
+     * Перечисляет весь домен допустимых примеров на сложение в пределах max:
+     * a ∈ [min, max], b ∈ [0, max - a], ответ a + b.
+     */
+    private List<ArithmeticGenerationUtils.Candidate> enumerateDomain(Range range) {
         int min = range.min();
         int max = range.max();
-        boolean requireUnique = quantity <= 50 && min == 0 && max == 10;
-
-        if (requireUnique) {
-            return generateUnique(quantity, min, max);
-        }
-
-        List<Task> tasks = new ArrayList<>(quantity);
-        ThreadLocalRandom rnd = ThreadLocalRandom.current();
-        for (int i = 0; i < quantity; i++) {
-            tasks.add(generateOneTask(min, max, rnd));
-        }
-        return tasks;
-    }
-
-    private List<Task> generateUnique(int quantity, int min, int max) {
-        Set<String> used = new HashSet<>();
-        List<Task> tasks = new ArrayList<>(quantity);
-        ThreadLocalRandom rnd = ThreadLocalRandom.current();
-        int maxAttempts = quantity * 50;
-        int attempts = 0;
-        while (tasks.size() < quantity && attempts < maxAttempts) {
-            Task task = generateOneTask(min, max, rnd);
-            if (used.add(task.question())) {
-                tasks.add(task);
+        List<ArithmeticGenerationUtils.Candidate> domain = new ArrayList<>();
+        for (int a = min; a <= max; a++) {
+            int bMax = max - a;
+            for (int b = 0; b <= bMax; b++) {
+                int answer = a + b;
+                String key = a + "+" + b;
+                domain.add(new ArithmeticGenerationUtils.Candidate(a, b, answer, key));
             }
-            attempts++;
         }
-        return tasks;
+        return domain;
     }
 
-    private Task generateOneTask(int min, int max, ThreadLocalRandom rnd) {
-        int a = min + rnd.nextInt(max - min + 1);
-        int bMax = max - a;
-        int b = bMax >= 0 ? rnd.nextInt(bMax + 1) : 0;
-        int answer = a + b;
-        String question = messageService.getText(GeneratorMessageKeys.QUESTION_FORMAT_ADDITION, a, b);
-        return new Task(question, String.valueOf(answer));
+    /**
+     * Уровни ослабления для сложения: сначала «интересные» примеры без 0 и 1,
+     * затем постепенное разрешение нулей и единиц.
+     */
+    private List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> buildRelaxationLevels() {
+        List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> levels =
+                new ArrayList<>();
+
+        // L0: a >= 2, b >= 2, answer >= 2
+        levels.add(c -> c.a() >= 2 && c.b() >= 2 && c.answer() >= 2);
+
+        // L1: a >= 2, b >= 2, answer >= 1
+        levels.add(c -> c.a() >= 2 && c.b() >= 2 && c.answer() >= 1);
+
+        // L2: a >= 2, b >= 1, answer >= 1
+        levels.add(c -> c.a() >= 2 && c.b() >= 1 && c.answer() >= 1);
+
+        // L3: a >= 2, answer >= 1 (разрешаем b = 0)
+        levels.add(c -> c.a() >= 2 && c.answer() >= 1);
+
+        // L4: любые неотрицательные
+        levels.add(c -> c.answer() >= 0);
+
+        return levels;
     }
 }
