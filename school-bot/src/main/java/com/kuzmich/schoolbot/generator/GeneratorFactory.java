@@ -9,17 +9,24 @@ import java.util.Map;
 
 /**
  * Фабрика генераторов заданий по типу операции (Strategy Pattern).
- * Регистрирует все бины {@link ArithmeticTaskGenerator}, переданные в конструктор.
+ * Регистрирует все бины {@link OperationTaskGenerator} (арифметика и числа/счёт).
  */
 @Component
 public final class GeneratorFactory {
 
     private final Map<OperationType, TaskGenerator> generators = new EnumMap<>(OperationType.class);
 
-    public GeneratorFactory(List<ArithmeticTaskGenerator> generatorBeans) {
+    public GeneratorFactory(List<OperationTaskGenerator> generatorBeans) {
         Validation.requireNonNull(generatorBeans, "generatorBeans");
-        for (ArithmeticTaskGenerator g : generatorBeans) {
+        for (OperationTaskGenerator g : generatorBeans) {
             generators.put(g.getOperationType(), g);
+        }
+        // Проверка при старте: все типы операций должны иметь генератор (избегаем ошибки при нажатии «Создать PDF»).
+        for (OperationType type : OperationType.values()) {
+            if (!generators.containsKey(type)) {
+                throw new IllegalStateException(
+                        "Генератор для типа " + type + " не зарегистрирован. Проверьте, что все генераторы (арифметика и числа/счёт) — бины Spring.");
+            }
         }
     }
 

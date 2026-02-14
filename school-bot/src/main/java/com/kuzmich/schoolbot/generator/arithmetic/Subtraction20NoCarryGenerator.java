@@ -51,6 +51,7 @@ public class Subtraction20NoCarryGenerator implements ArithmeticTaskGenerator {
         List<ArithmeticGenerationUtils.Candidate> domain = enumerateDomain();
         List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> levels =
                 buildRelaxationLevels();
+        String blank = messageService.getText(GeneratorMessageKeys.QUESTION_BLANK);
 
         return ArithmeticGenerationUtils.generateWithRelaxation(
                 domain,
@@ -61,7 +62,8 @@ public class Subtraction20NoCarryGenerator implements ArithmeticTaskGenerator {
                     String question = messageService.getText(
                             GeneratorMessageKeys.QUESTION_FORMAT_SUBTRACTION,
                             candidate.a(),
-                            candidate.b()
+                            candidate.b(),
+                            blank
                     );
                     return new Task(question, String.valueOf(candidate.answer()));
                 }

@@ -19,7 +19,11 @@ public class ArithmeticContext implements GenerationContext {
     @Override
     public ArithmeticContext validate() {
         Validation.requireNonNull(operationType, "operationType");
-        Validation.requireNonNull(numberRange, "numberRange");
+        // numberRange обязателен только для арифметических операций
+        if (operationType == OperationType.ADDITION_10 || operationType == OperationType.SUBTRACTION_10
+                || operationType == OperationType.ADDITION_20_NO_CARRY || operationType == OperationType.SUBTRACTION_20_NO_CARRY) {
+            Validation.requireNonNull(numberRange, "numberRange");
+        }
         if (quantity < 0) {
             throw new com.kuzmich.schoolbot.core.validation.ValidationException(
                     "quantity не может быть отрицательным, получено: " + quantity);

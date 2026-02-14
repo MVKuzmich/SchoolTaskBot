@@ -72,6 +72,11 @@ public class PdfGenerationService {
         return switch (operationType) {
             case ADDITION_10, SUBTRACTION_10 -> new Range(0, 10);
             case ADDITION_20_NO_CARRY, SUBTRACTION_20_NO_CARRY -> new Range(0, 20);
+            case NUMBER_COMPOSITION_2_9 -> new Range(2, 9);
+            case NUMBER_COMPOSITION_10 -> new Range(10, 10);
+            case NUMBER_COMPOSITION_11_20 -> new Range(11, 20);
+            case NUMBER_COMPOSITION -> new Range(2, 10);
+            case COMPARISON, NUMBER_SEQUENCE -> new Range(0, 20);
         };
     }
 

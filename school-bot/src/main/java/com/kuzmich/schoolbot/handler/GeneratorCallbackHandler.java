@@ -16,6 +16,7 @@ import com.kuzmich.schoolbot.generator.service.PdfGenerationAccessException;
 import com.kuzmich.schoolbot.generator.service.PdfGenerationService;
 import com.kuzmich.schoolbot.state.UserState;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -28,6 +29,7 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class GeneratorCallbackHandler implements CallbackQueryHandler {
 
     private final MessageService messageService;
@@ -47,6 +49,13 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
         return data.startsWith("mode_") || data.startsWith("gen_")
                 || data.startsWith("subject_") || data.startsWith("topic_")
                 || data.startsWith("op_") || data.startsWith("qty_")
+                || CallbackData.OP_NUMBER_COMPOSITION.equals(data)
+                || CallbackData.OP_NUMBER_COMPOSITION_2_9.equals(data)
+                || CallbackData.OP_NUMBER_COMPOSITION_10.equals(data)
+                || CallbackData.OP_NUMBER_COMPOSITION_11_20.equals(data)
+                || CallbackData.OP_NUMBER_COMPOSITION_MIXED.equals(data)
+                || CallbackData.OP_COMPARISON.equals(data)
+                || CallbackData.OP_NUMBER_SEQUENCE.equals(data)
                 || CallbackData.BACK_TO_MODE.equals(data)
                 || CallbackData.BACK_TO_CLASS.equals(data) || CallbackData.MENU.equals(data)
                 || "help".equals(data);
@@ -58,8 +67,12 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
         String data = Validation.requireOneOf(callbackQuery.getData(), "callbackData",
                 CallbackData.MODE_GENERATOR, CallbackData.MODE_TRAINER, CallbackData.GEN_ELEMENTARY,
                 CallbackData.GEN_SECONDARY, CallbackData.SUBJECT_MATH, CallbackData.TOPIC_ARITHMETIC,
+                CallbackData.TOPIC_NUMBERS,
                 CallbackData.OP_ADDITION_10, CallbackData.OP_SUBTRACTION_10,
                 CallbackData.OP_ADDITION_20_NO_CARRY, CallbackData.OP_SUBTRACTION_20_NO_CARRY,
+                CallbackData.OP_NUMBER_COMPOSITION, CallbackData.OP_NUMBER_COMPOSITION_2_9,
+                CallbackData.OP_NUMBER_COMPOSITION_10, CallbackData.OP_NUMBER_COMPOSITION_11_20,
+                CallbackData.OP_NUMBER_COMPOSITION_MIXED, CallbackData.OP_COMPARISON, CallbackData.OP_NUMBER_SEQUENCE,
                 CallbackData.QTY_10, CallbackData.QTY_20, CallbackData.QTY_30, CallbackData.QTY_50,
                 CallbackData.GEN_DEMO_PDF, CallbackData.GEN_CONFIRM_PDF,
                 CallbackData.BACK_TO_MODE, CallbackData.BACK_TO_CLASS, CallbackData.MENU, "help");
@@ -78,10 +91,18 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
             case CallbackData.GEN_SECONDARY -> handleGenSecondary(client, chatId, userId);
             case CallbackData.SUBJECT_MATH -> handleSubjectMath(client, chatId, userId);
             case CallbackData.TOPIC_ARITHMETIC -> handleTopicArithmetic(client, chatId, userId);
+            case CallbackData.TOPIC_NUMBERS -> handleTopicNumbers(client, chatId, userId);
+            case CallbackData.OP_NUMBER_COMPOSITION -> handleCompositionSubmenu(client, chatId, userId);
             case CallbackData.OP_ADDITION_10,
                     CallbackData.OP_SUBTRACTION_10,
                     CallbackData.OP_ADDITION_20_NO_CARRY,
-                    CallbackData.OP_SUBTRACTION_20_NO_CARRY ->
+                    CallbackData.OP_SUBTRACTION_20_NO_CARRY,
+                    CallbackData.OP_NUMBER_COMPOSITION_2_9,
+                    CallbackData.OP_NUMBER_COMPOSITION_10,
+                    CallbackData.OP_NUMBER_COMPOSITION_11_20,
+                    CallbackData.OP_NUMBER_COMPOSITION_MIXED,
+                    CallbackData.OP_COMPARISON,
+                    CallbackData.OP_NUMBER_SEQUENCE ->
                     handleOperationSelected(client, chatId, userId, data);
             case CallbackData.QTY_10, CallbackData.QTY_20, CallbackData.QTY_30, CallbackData.QTY_50 ->
                     handleQuantitySelected(client, chatId, userId, data);
@@ -153,10 +174,11 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
         userContextService.save(ctx);
         userStateService.setState(userId, UserState.AWAITING_TOPIC);
         String arithmetic = messageService.getText(GeneratorMessageKeys.TOPIC_ARITHMETIC);
+        String numbers = messageService.getText(GeneratorMessageKeys.TOPIC_NUMBERS);
         String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
         String menu = messageService.getText(GeneratorMessageKeys.BUTTON_MENU);
         messageService.sendFromKey(client, chatId, GeneratorMessageKeys.TOPIC_TITLE,
-                GeneratorKeyboardFactory.topicSelectionKeyboard(arithmetic, back, menu));
+                GeneratorKeyboardFactory.topicSelectionKeyboard(arithmetic, numbers, back, menu));
     }
 
     private void handleBackToMode(TelegramClient client, Long chatId, Long userId) {
@@ -201,6 +223,39 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
 
         messageService.sendFromKey(client, chatId, GeneratorMessageKeys.OPERATION_TITLE,
                 GeneratorKeyboardFactory.operationSelectionKeyboard(add10, sub10, add20, sub20, back, menu));
+    }
+
+    private void handleTopicNumbers(TelegramClient client, Long chatId, Long userId) {
+        UserContext ctx = userContextService.getOrCreate(userId);
+        ctx.setTopic("NUMBERS");
+        userContextService.save(ctx);
+        userStateService.setState(userId, UserState.AWAITING_OPERATION_TYPE);
+
+        String composition = messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_COMPOSITION);
+        String comparison = messageService.getText(GeneratorMessageKeys.OPERATION_COMPARISON);
+        String sequence = messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_SEQUENCE);
+        String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
+        String menu = messageService.getText(GeneratorMessageKeys.BUTTON_MENU);
+
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.OPERATION_TITLE_NUMBERS,
+                GeneratorKeyboardFactory.operationSelectionKeyboardNumbers(composition, comparison, sequence, back, menu));
+    }
+
+    /**
+     * Показывает подменю выбора варианта «Состав числа» (2–9, 10, 11–20, смешанный).
+     */
+    private void handleCompositionSubmenu(TelegramClient client, Long chatId, Long userId) {
+        userStateService.setState(userId, UserState.AWAITING_OPERATION_TYPE);
+
+        String comp2To9 = messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_COMPOSITION_2_9);
+        String comp10 = messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_COMPOSITION_10);
+        String comp11To20 = messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_COMPOSITION_11_20);
+        String compMixed = messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_COMPOSITION_MIXED);
+        String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
+        String menu = messageService.getText(GeneratorMessageKeys.BUTTON_MENU);
+
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.OPERATION_NUMBER_COMPOSITION_TITLE,
+                GeneratorKeyboardFactory.compositionVariantKeyboard(comp2To9, comp10, comp11To20, compMixed, back, menu));
     }
 
     private void handleOperationSelected(TelegramClient client, Long chatId, Long userId, String data) {
@@ -253,7 +308,11 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
         userStateService.setState(userId, UserState.GENERATING);
 
         String operationLabel = resolveOperationLabel(operationType);
-        String title = "Арифметика: " + operationLabel;
+        // Для PDF используем вариант без emoji: шрифт DejaVu не поддерживает символы типа 🔢
+        String topicPrefix = "NUMBERS".equals(ctx.getTopic())
+                ? messageService.getText(GeneratorMessageKeys.TOPIC_NUMBERS_LABEL) + ": "
+                : "Арифметика: ";
+        String title = topicPrefix + operationLabel;
 
         try {
             byte[] pdf = pdfGenerationService.generateArithmeticPdf(userId, operationType, quantity, title);
@@ -275,6 +334,7 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
             messageService.sendText(client, chatId, e.getMessage());
             userStateService.setState(userId, UserState.COMPLETED);
         } catch (Exception e) {
+            log.warn("Ошибка генерации PDF: userId={}, operationType={}", userId, ctx.getOperationType(), e);
             messageService.sendFromKey(client, chatId, GeneratorMessageKeys.PDF_GENERATION_ERROR);
             userStateService.setState(userId, UserState.ERROR);
         }
@@ -296,6 +356,12 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
             case CallbackData.OP_SUBTRACTION_10 -> OperationType.SUBTRACTION_10;
             case CallbackData.OP_ADDITION_20_NO_CARRY -> OperationType.ADDITION_20_NO_CARRY;
             case CallbackData.OP_SUBTRACTION_20_NO_CARRY -> OperationType.SUBTRACTION_20_NO_CARRY;
+            case CallbackData.OP_NUMBER_COMPOSITION_2_9 -> OperationType.NUMBER_COMPOSITION_2_9;
+            case CallbackData.OP_NUMBER_COMPOSITION_10 -> OperationType.NUMBER_COMPOSITION_10;
+            case CallbackData.OP_NUMBER_COMPOSITION_11_20 -> OperationType.NUMBER_COMPOSITION_11_20;
+            case CallbackData.OP_NUMBER_COMPOSITION_MIXED -> OperationType.NUMBER_COMPOSITION;
+            case CallbackData.OP_COMPARISON -> OperationType.COMPARISON;
+            case CallbackData.OP_NUMBER_SEQUENCE -> OperationType.NUMBER_SEQUENCE;
             default -> throw new IllegalArgumentException("Unknown operation callback: " + data);
         };
     }
@@ -306,6 +372,12 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
             case SUBTRACTION_10 -> messageService.getText(GeneratorMessageKeys.OPERATION_SUBTRACTION_10);
             case ADDITION_20_NO_CARRY -> messageService.getText(GeneratorMessageKeys.OPERATION_ADDITION_20_NO_CARRY);
             case SUBTRACTION_20_NO_CARRY -> messageService.getText(GeneratorMessageKeys.OPERATION_SUBTRACTION_20_NO_CARRY);
+            case NUMBER_COMPOSITION_2_9 -> messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_COMPOSITION_2_9);
+            case NUMBER_COMPOSITION_10 -> messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_COMPOSITION_10);
+            case NUMBER_COMPOSITION_11_20 -> messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_COMPOSITION_11_20);
+            case NUMBER_COMPOSITION -> messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_COMPOSITION_MIXED);
+            case COMPARISON -> messageService.getText(GeneratorMessageKeys.OPERATION_COMPARISON);
+            case NUMBER_SEQUENCE -> messageService.getText(GeneratorMessageKeys.OPERATION_NUMBER_SEQUENCE);
         };
     }
 

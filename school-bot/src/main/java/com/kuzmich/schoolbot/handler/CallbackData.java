@@ -27,6 +27,8 @@ public final class CallbackData {
 
     /** Тема: Арифметика (сложение/вычитание). */
     public static final String TOPIC_ARITHMETIC = "topic_arithmetic";
+    /** Тема: Числа и счёт (состав числа, сравнение, ряд). */
+    public static final String TOPIC_NUMBERS = "topic_numbers";
 
     /** Тип операции: сложение 0-10. */
     public static final String OP_ADDITION_10 = "op_add_10";
@@ -36,6 +38,20 @@ public final class CallbackData {
     public static final String OP_ADDITION_20_NO_CARRY = "op_add_20_nc";
     /** Тип операции: вычитание до 20 без перехода через десяток. */
     public static final String OP_SUBTRACTION_20_NO_CARRY = "op_sub_20_nc";
+    /** Тип задания: состав числа — открывает подменю выбора варианта (2–9, 10, 11–20, смешанный). */
+    public static final String OP_NUMBER_COMPOSITION = "op_number_composition";
+    /** Состав числа 2–9. */
+    public static final String OP_NUMBER_COMPOSITION_2_9 = "op_comp_2_9";
+    /** Состав числа 10. */
+    public static final String OP_NUMBER_COMPOSITION_10 = "op_comp_10";
+    /** Состав числа 11–20. */
+    public static final String OP_NUMBER_COMPOSITION_11_20 = "op_comp_11_20";
+    /** Состав числа смешанный (2–10). */
+    public static final String OP_NUMBER_COMPOSITION_MIXED = "op_comp_mixed";
+    /** Тип задания: сравнение чисел. */
+    public static final String OP_COMPARISON = "op_comparison";
+    /** Тип задания: продолжи числовой ряд. */
+    public static final String OP_NUMBER_SEQUENCE = "op_number_sequence";
 
     /** Количество примеров: 10. */
     public static final String QTY_10 = "qty_10";

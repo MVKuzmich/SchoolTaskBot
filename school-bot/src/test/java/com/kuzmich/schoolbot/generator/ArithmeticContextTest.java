@@ -73,4 +73,15 @@ class ArithmeticContextTest {
                 .build();
         assertThatCode(ctx::validate).doesNotThrowAnyException();
     }
+
+    @Test
+    @DisplayName("validate: успех при NUMBER_COMPOSITION и null numberRange")
+    void validate_successWhenNumberCompositionAndNullRange() {
+        ArithmeticContext ctx = ArithmeticContext.builder()
+                .operationType(OperationType.NUMBER_COMPOSITION)
+                .numberRange(null)
+                .quantity(10)
+                .build();
+        assertThatCode(ctx::validate).doesNotThrowAnyException();
+    }
 }

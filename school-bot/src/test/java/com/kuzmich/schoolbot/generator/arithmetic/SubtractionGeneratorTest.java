@@ -5,6 +5,7 @@ import com.kuzmich.schoolbot.generator.ArithmeticContext;
 import com.kuzmich.schoolbot.generator.OperationType;
 import com.kuzmich.schoolbot.generator.Range;
 import com.kuzmich.schoolbot.generator.Task;
+import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -71,8 +73,9 @@ class SubtractionGeneratorTest {
         @Test
         @DisplayName("все ответы корректны: a - b = answer, результат не отрицательный")
         void shouldGenerateCorrectAnswers_subtraction() {
-            when(messageService.getText(anyString(), any(), any()))
-                    .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = ");
+            when(messageService.getText(eq(GeneratorMessageKeys.QUESTION_BLANK))).thenReturn("  ");
+            when(messageService.getText(anyString(), any(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = " + inv.getArgument(3));
 
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.SUBTRACTION_10)
@@ -114,8 +117,9 @@ class SubtractionGeneratorTest {
         @Test
         @DisplayName("при quantity больше размера домена возвращает все уникальные примеры (без дублей)")
         void shouldGenerateAtMostDomainSize_whenQuantity200() {
-            when(messageService.getText(anyString(), any(), any()))
-                    .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = ");
+            when(messageService.getText(eq(GeneratorMessageKeys.QUESTION_BLANK))).thenReturn("  ");
+            when(messageService.getText(anyString(), any(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = " + inv.getArgument(3));
 
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.SUBTRACTION_10)

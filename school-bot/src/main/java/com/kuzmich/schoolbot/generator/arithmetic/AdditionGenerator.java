@@ -53,6 +53,7 @@ public class AdditionGenerator implements ArithmeticTaskGenerator {
         List<ArithmeticGenerationUtils.Candidate> domain = enumerateDomain(range);
         List<java.util.function.Predicate<ArithmeticGenerationUtils.Candidate>> levels =
                 buildRelaxationLevels();
+        String blank = messageService.getText(GeneratorMessageKeys.QUESTION_BLANK);
 
         return ArithmeticGenerationUtils.generateWithRelaxation(
                 domain,
@@ -63,7 +64,8 @@ public class AdditionGenerator implements ArithmeticTaskGenerator {
                     String question = messageService.getText(
                             GeneratorMessageKeys.QUESTION_FORMAT_ADDITION,
                             candidate.a(),
-                            candidate.b()
+                            candidate.b(),
+                            blank
                     );
                     return new Task(question, String.valueOf(candidate.answer()));
                 }

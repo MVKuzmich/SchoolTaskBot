@@ -48,14 +48,7 @@ public final class ArithmeticGenerationUtils {
 
     /**
      * Генерация заданий из заранее перечисленного домена кандидатов с многоуровневым ослаблением правил.
-     *
-     * @param domain         полный список всех допустимых математически примеров (без учёта "красоты")
-     * @param quantity       требуемое количество заданий
-     * @param levels         уровни правил от самого строгого к более мягким
-     * @param rnd            источник случайных чисел
-     * @param toTask         преобразование кандидата в {@link Task} (форматирование текста вопроса и ответа)
-     * @return список сгенерированных заданий; размер может быть меньше {@code quantity}, если даже на самом мягком
-     * уровне не хватает уникальных кандидатов
+     * Без ослабления эвристик и без повторов (для арифметики).
      */
     public static List<Task> generateWithRelaxation(
             List<Candidate> domain,
@@ -63,6 +56,31 @@ public final class ArithmeticGenerationUtils {
             List<Predicate<Candidate>> levels,
             ThreadLocalRandom rnd,
             Function<Candidate, Task> toTask
+    ) {
+        return generateWithRelaxation(domain, quantity, levels, rnd, toTask, false, false);
+    }
+
+    /**
+     * Генерация заданий из домена с многоуровневым ослаблением правил.
+     *
+     * @param domain                    полный список всех допустимых примеров
+     * @param quantity                  требуемое количество заданий
+     * @param levels                    уровни правил от самого строгого к более мягким
+     * @param rnd                       источник случайных чисел
+     * @param toTask                    преобразование кандидата в {@link Task}
+     * @param relaxedSequenceHeuristics если true, запрещаем только два одинаковых задания подряд (по key);
+     *                                  иначе дополнительно запрещаем одинаковый первый операнд и ответ подряд
+     * @param allowRepeats               если true, при нехватке уникальных кандидатов добиваем до quantity повторами
+     * @return список заданий; при allowRepeats всегда длины quantity (если domain не пуст)
+     */
+    public static List<Task> generateWithRelaxation(
+            List<Candidate> domain,
+            int quantity,
+            List<Predicate<Candidate>> levels,
+            ThreadLocalRandom rnd,
+            Function<Candidate, Task> toTask,
+            boolean relaxedSequenceHeuristics,
+            boolean allowRepeats
     ) {
         if (quantity <= 0) {
             return List.of();
@@ -83,7 +101,6 @@ public final class ArithmeticGenerationUtils {
                 break;
             }
 
-            // формируем пул кандидатов для текущего уровня
             List<Candidate> pool = new ArrayList<>();
             Set<Integer> distinctA = new HashSet<>();
             Set<Integer> distinctAnswers = new HashSet<>();
@@ -108,20 +125,16 @@ public final class ArithmeticGenerationUtils {
             int capA = computeCap(quantity, distinctA.size());
             int capAnswer = computeCap(quantity, distinctAnswers.size());
 
-            // Первый проход: уважаем квоты и эвристику последовательности.
             for (Candidate candidate : pool) {
                 if (result.size() >= quantity) {
                     break;
                 }
-
-                if (violatesSequenceHeuristics(lastCandidate, candidate)) {
+                if (violatesSequenceHeuristics(lastCandidate, candidate, relaxedSequenceHeuristics)) {
                     continue;
                 }
-
                 if (!passesBalance(candidate, countA, countAnswer, capA, capAnswer)) {
                     continue;
                 }
-
                 result.add(toTask.apply(candidate));
                 usedKeys.add(candidate.key());
                 lastCandidate = candidate;
@@ -133,7 +146,6 @@ public final class ArithmeticGenerationUtils {
                 continue;
             }
 
-            // Второй проход: снимаем квоты, но продолжаем уважать последовательность и уникальность.
             for (Candidate candidate : pool) {
                 if (result.size() >= quantity) {
                     break;
@@ -141,10 +153,9 @@ public final class ArithmeticGenerationUtils {
                 if (usedKeys.contains(candidate.key())) {
                     continue;
                 }
-                if (violatesSequenceHeuristics(lastCandidate, candidate)) {
+                if (violatesSequenceHeuristics(lastCandidate, candidate, relaxedSequenceHeuristics)) {
                     continue;
                 }
-
                 result.add(toTask.apply(candidate));
                 usedKeys.add(candidate.key());
                 lastCandidate = candidate;
@@ -153,26 +164,31 @@ public final class ArithmeticGenerationUtils {
             }
         }
 
+        // Для состава числа: при нехватке уникальных заданий добиваем повторами из домена
+        if (allowRepeats && result.size() < quantity && !domain.isEmpty()) {
+            while (result.size() < quantity) {
+                Candidate c = domain.get(rnd.nextInt(domain.size()));
+                result.add(toTask.apply(c));
+            }
+        }
+
         return result;
     }
 
     /**
-     * Простые эвристики для улучшения "визуального качества" последовательности примеров.
-     * Сейчас:
-     * <ul>
-     *     <li>запрещаем два абсолютно одинаковых примера подряд (одинаковый ключ);</li>
-     *     <li>запрещаем одинаковый первый операнд подряд (a);</li>
-     *     <li>запрещаем одинаковый ответ подряд (детям скучно видеть одну и ту же цифру).</li>
-     * </ul>
-     * При необходимости сюда можно добавить дополнительные правила (например, не повторять один и тот же
-     * второй операнд подряд и т.п.).
+     * Эвристики последовательности: когда {@code relaxed == false} — запрещаем подряд одинаковый ключ,
+     * одинаковый первый операнд (a) и одинаковый ответ; когда {@code relaxed == true} — только одинаковый ключ
+     * (для состава числа, где a всегда одно и то же).
      */
-    private static boolean violatesSequenceHeuristics(Candidate last, Candidate current) {
+    private static boolean violatesSequenceHeuristics(Candidate last, Candidate current, boolean relaxed) {
         if (last == null) {
             return false;
         }
         if (last.key().equals(current.key())) {
             return true;
+        }
+        if (relaxed) {
+            return false;
         }
         if (last.a() == current.a()) {
             return true;

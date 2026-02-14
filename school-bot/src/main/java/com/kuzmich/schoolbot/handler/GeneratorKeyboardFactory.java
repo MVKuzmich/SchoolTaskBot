@@ -86,14 +86,22 @@ public final class GeneratorKeyboardFactory {
     }
 
     /**
-     * Клавиатура выбора темы (пока одна — Арифметика).
+     * Клавиатура выбора темы: Арифметика, Числа и счёт.
      */
-    public static InlineKeyboardMarkup topicSelectionKeyboard(String arithmeticLabel, String backLabel, String menuLabel) {
+    public static InlineKeyboardMarkup topicSelectionKeyboard(String arithmeticLabel,
+                                                              String numbersLabel,
+                                                              String backLabel,
+                                                              String menuLabel) {
         return InlineKeyboardMarkup.builder()
                 .keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
                                 .text(arithmeticLabel)
                                 .callbackData(CallbackData.TOPIC_ARITHMETIC)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(numbersLabel)
+                                .callbackData(CallbackData.TOPIC_NUMBERS)
                                 .build()))
                 .keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
@@ -136,6 +144,82 @@ public final class GeneratorKeyboardFactory {
                         InlineKeyboardButton.builder()
                                 .text(sub20NoCarryLabel)
                                 .callbackData(CallbackData.OP_SUBTRACTION_20_NO_CARRY)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(backLabel)
+                                .callbackData(CallbackData.BACK_TO_CLASS)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(menuLabel)
+                                .callbackData(CallbackData.MENU)
+                                .build()))
+                .build();
+    }
+
+    /**
+     * Клавиатура выбора типа задания по теме «Числа и счёт»: состав числа, сравнение, числовой ряд.
+     */
+    public static InlineKeyboardMarkup operationSelectionKeyboardNumbers(String compositionLabel,
+                                                                        String comparisonLabel,
+                                                                        String sequenceLabel,
+                                                                        String backLabel,
+                                                                        String menuLabel) {
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(compositionLabel)
+                                .callbackData(CallbackData.OP_NUMBER_COMPOSITION)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(comparisonLabel)
+                                .callbackData(CallbackData.OP_COMPARISON)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(sequenceLabel)
+                                .callbackData(CallbackData.OP_NUMBER_SEQUENCE)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(backLabel)
+                                .callbackData(CallbackData.BACK_TO_CLASS)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(menuLabel)
+                                .callbackData(CallbackData.MENU)
+                                .build()))
+                .build();
+    }
+
+    /**
+     * Подменю выбора варианта «Состав числа»: 2–9, 10, 11–20, смешанный (2–10).
+     */
+    public static InlineKeyboardMarkup compositionVariantKeyboard(String comp2To9Label,
+                                                                 String comp10Label,
+                                                                 String comp11To20Label,
+                                                                 String compMixedLabel,
+                                                                 String backLabel,
+                                                                 String menuLabel) {
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(comp2To9Label)
+                                .callbackData(CallbackData.OP_NUMBER_COMPOSITION_2_9)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(comp10Label)
+                                .callbackData(CallbackData.OP_NUMBER_COMPOSITION_10)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(comp11To20Label)
+                                .callbackData(CallbackData.OP_NUMBER_COMPOSITION_11_20)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(compMixedLabel)
+                                .callbackData(CallbackData.OP_NUMBER_COMPOSITION_MIXED)
                                 .build()))
                 .keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()

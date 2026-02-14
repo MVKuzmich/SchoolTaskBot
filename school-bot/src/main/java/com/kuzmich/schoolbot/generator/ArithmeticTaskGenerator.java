@@ -1,13 +1,8 @@
 package com.kuzmich.schoolbot.generator;
 
 /**
- * Генератор арифметических заданий, привязанный к одному типу операции.
- * Позволяет фабрике автоматически регистрировать все бины этого типа.
+ * Генератор арифметических заданий (сложение/вычитание), привязанный к одному типу операции.
+ * Расширяет {@link OperationTaskGenerator} для регистрации в {@link GeneratorFactory}.
  */
-public interface ArithmeticTaskGenerator extends TaskGenerator {
-
-    /**
-     * Тип операции, который обрабатывает этот генератор.
-     */
-    OperationType getOperationType();
+public interface ArithmeticTaskGenerator extends OperationTaskGenerator {
 }

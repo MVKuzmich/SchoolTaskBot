@@ -5,6 +5,7 @@ import com.kuzmich.schoolbot.generator.ArithmeticContext;
 import com.kuzmich.schoolbot.generator.OperationType;
 import com.kuzmich.schoolbot.generator.Range;
 import com.kuzmich.schoolbot.generator.Task;
+import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -47,8 +49,9 @@ class Addition20NoCarryGeneratorTest {
     @Test
     @DisplayName("все примеры в пределах 20 и без перехода через десяток")
     void shouldNotCrossDecimal_addition20() {
-        when(messageService.getText(anyString(), any(), any()))
-                .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = ");
+        when(messageService.getText(eq(GeneratorMessageKeys.QUESTION_BLANK))).thenReturn("  ");
+        when(messageService.getText(anyString(), any(), any(), any()))
+                .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = " + inv.getArgument(3));
 
         ArithmeticContext context = ArithmeticContext.builder()
                 .operationType(OperationType.ADDITION_20_NO_CARRY)

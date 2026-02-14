@@ -5,6 +5,7 @@ import com.kuzmich.schoolbot.generator.ArithmeticContext;
 import com.kuzmich.schoolbot.generator.OperationType;
 import com.kuzmich.schoolbot.generator.Range;
 import com.kuzmich.schoolbot.generator.Task;
+import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -52,8 +54,9 @@ class AdditionGeneratorTest {
         @Test
         @DisplayName("возвращает 20 заданий с ответами в [0, 10]")
         void shouldGenerateValidAdditionTasks_range0to10() {
-            when(messageService.getText(anyString(), any(), any()))
-                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = ");
+            when(messageService.getText(eq(GeneratorMessageKeys.QUESTION_BLANK))).thenReturn("  ");
+            when(messageService.getText(anyString(), any(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = " + inv.getArgument(3));
 
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.ADDITION_10)
@@ -74,8 +77,9 @@ class AdditionGeneratorTest {
         @Test
         @DisplayName("все ответы корректны: a + b = answer")
         void shouldGenerateCorrectAnswers_addition() {
-            when(messageService.getText(anyString(), any(), any()))
-                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = ");
+            when(messageService.getText(eq(GeneratorMessageKeys.QUESTION_BLANK))).thenReturn("  ");
+            when(messageService.getText(anyString(), any(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = " + inv.getArgument(3));
 
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.ADDITION_10)
@@ -117,8 +121,9 @@ class AdditionGeneratorTest {
         @Test
         @DisplayName("при quantity больше размера домена возвращает все уникальные примеры (без дублей)")
         void shouldGenerateAtMostDomainSize_whenQuantity200() {
-            when(messageService.getText(anyString(), any(), any()))
-                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = ");
+            when(messageService.getText(eq(GeneratorMessageKeys.QUESTION_BLANK))).thenReturn("  ");
+            when(messageService.getText(anyString(), any(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = " + inv.getArgument(3));
 
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.ADDITION_10)
@@ -141,8 +146,9 @@ class AdditionGeneratorTest {
         @Test
         @DisplayName("при quantity = 50 примеры не повторяются")
         void shouldGenerateUniqueTasks_whenQuantity50() {
-            when(messageService.getText(anyString(), any(), any()))
-                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = ");
+            when(messageService.getText(eq(GeneratorMessageKeys.QUESTION_BLANK))).thenReturn("  ");
+            when(messageService.getText(anyString(), any(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = " + inv.getArgument(3));
 
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.ADDITION_10)
@@ -160,8 +166,9 @@ class AdditionGeneratorTest {
         @Test
         @DisplayName("при quantity = 100 возвращает только уникальные примеры (не больше размера домена)")
         void shouldReturnOnlyUnique_whenQuantity100() {
-            when(messageService.getText(anyString(), any(), any()))
-                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = ");
+            when(messageService.getText(eq(GeneratorMessageKeys.QUESTION_BLANK))).thenReturn("  ");
+            when(messageService.getText(anyString(), any(), any(), any()))
+                    .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = " + inv.getArgument(3));
 
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.ADDITION_10)
