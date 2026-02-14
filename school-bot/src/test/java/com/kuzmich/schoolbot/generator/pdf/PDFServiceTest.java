@@ -17,11 +17,11 @@ class PDFServiceTest {
     private final PDFService pdfService = new PDFService(layoutService);
 
     @Test
-    void shouldGeneratePDF_withCyrillicTitleAndTwoPages() throws IOException {
+    void shouldGeneratePDF_withTitleAndSingleTasksPage() throws IOException {
         // given
         List<Task> tasks = List.of(
-                new Task("3 + 4 = __", "7", Map.of()),
-                new Task("5 + 2 = __", "7", Map.of())
+                new Task("3 + 4 = ", "7", Map.of()),
+                new Task("5 + 2 = ", "7", Map.of())
         );
         // В этом тесте используем ASCII-заголовок, чтобы не зависеть от наличия кириллического шрифта.
         String title = "Arithmetic: Addition";
@@ -33,7 +33,8 @@ class PDFServiceTest {
         assertThat(pdf).isNotEmpty();
 
         try (PDDocument doc = Loader.loadPDF(pdf)) {
-            assertThat(doc.getNumberOfPages()).isEqualTo(2);
+            // Одна страница с заданиями (страница ответов не генерируется)
+            assertThat(doc.getNumberOfPages()).isEqualTo(1);
         }
     }
 }

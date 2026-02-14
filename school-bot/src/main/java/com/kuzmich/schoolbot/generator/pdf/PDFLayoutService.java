@@ -16,19 +16,13 @@ import java.util.List;
 
 /**
  * Отвечает за визуальное оформление PDF: страницы с заданиями и с ответами.
- * Использует переданный шрифт и базовые константы отступов.
+ * Использует переданный шрифт и динамическую раскладку по количеству заданий (сетка, кегль и интервалы подбираются автоматически).
  */
 @Service
 @Slf4j
 public class PDFLayoutService {
 
-    private static final float MARGIN_LEFT = 50f;
-    private static final float MARGIN_TOP = 50f;
-    private static final float LINE_HEIGHT = 16f;
-    private static final float TITLE_FONT_SIZE = 16f;
-    private static final float TEXT_FONT_SIZE = 12f;
-    private static final float COLUMN_GAP = 40f;
-
+    private static final float HEADER_LINE_OFFSET = 20f;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     public void addTasksPage(PDDocument document,
@@ -39,43 +33,33 @@ public class PDFLayoutService {
         PDPage page = new PDPage(PDRectangle.A4);
         document.addPage(page);
 
-        try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-            float pageWidth = page.getMediaBox().getWidth();
-            float pageHeight = page.getMediaBox().getHeight();
+        float pageWidth = page.getMediaBox().getWidth();
+        float pageHeight = page.getMediaBox().getHeight();
+        int total = tasks != null ? tasks.size() : 0;
+        PdfLayoutParams layout = PdfLayoutParams.forTaskCount(total > 0 ? total : 1, pageWidth, pageHeight);
 
+        try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
             // Заголовок
-            showSafeText(contentStream, font, TITLE_FONT_SIZE,
-                    MARGIN_LEFT, pageHeight - MARGIN_TOP, title);
-            showSafeText(contentStream, font, TEXT_FONT_SIZE,
-                    MARGIN_LEFT, pageHeight - MARGIN_TOP - LINE_HEIGHT,
+            showSafeText(contentStream, font, layout.titleFontSize(),
+                    layout.marginLeft(), pageHeight - layout.marginTop(), title);
+            showSafeText(contentStream, font, layout.titleFontSize() * 0.85f,
+                    layout.marginLeft(), pageHeight - layout.marginTop() - HEADER_LINE_OFFSET,
                     "Дата: " + date.format(DATE_FORMATTER));
 
-            // Задания в две колонки
-            int total = tasks != null ? tasks.size() : 0;
             if (total == 0) {
                 return;
             }
 
-            int itemsPerColumn = (int) Math.ceil(total / 2.0);
-            float contentStartY = pageHeight - MARGIN_TOP - 3 * LINE_HEIGHT;
-
-            float contentWidth = pageWidth - 2 * MARGIN_LEFT;
-            float columnWidth = (contentWidth - COLUMN_GAP) / 2;
-            float leftColumnX = MARGIN_LEFT;
-            float rightColumnX = MARGIN_LEFT + columnWidth + COLUMN_GAP;
-
+            int itemsPerColumn = layout.rows();
             for (int i = 0; i < total; i++) {
                 Task task = tasks.get(i);
-                int index = i + 1;
                 int column = i / itemsPerColumn;
                 int row = i % itemsPerColumn;
 
-                float x = (column == 0) ? leftColumnX : rightColumnX;
-                float y = contentStartY - row * LINE_HEIGHT;
+                float x = layout.columnX(column);
+                float y = layout.rowY(row);
 
-                String line = index + ") " + task.question();
-
-                showSafeText(contentStream, font, TEXT_FONT_SIZE, x, y, line);
+                showSafeText(contentStream, font, layout.taskFontSize(), x, y, task.question());
             }
         } catch (IOException e) {
             log.error("Ошибка при рисовании страницы с заданиями", e);
@@ -89,26 +73,21 @@ public class PDFLayoutService {
         PDPage page = new PDPage(PDRectangle.A4);
         document.addPage(page);
 
+        float pageWidth = page.getMediaBox().getWidth();
+        float pageHeight = page.getMediaBox().getHeight();
+        int total = tasks != null ? tasks.size() : 0;
+        PdfLayoutParams layout = PdfLayoutParams.forTaskCount(total > 0 ? total : 1, pageWidth, pageHeight);
+
         try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-            float pageWidth = page.getMediaBox().getWidth();
-            float pageHeight = page.getMediaBox().getHeight();
+            showSafeText(contentStream, font, layout.titleFontSize(),
+                    layout.marginLeft(), pageHeight - layout.marginTop(), "Ответы");
 
-            // Заголовок
-            showSafeText(contentStream, font, TITLE_FONT_SIZE,
-                    MARGIN_LEFT, pageHeight - MARGIN_TOP, "Ответы");
-
-            int total = tasks != null ? tasks.size() : 0;
             if (total == 0) {
                 return;
             }
 
-            int itemsPerColumn = (int) Math.ceil(total / 2.0);
-            float contentStartY = pageHeight - MARGIN_TOP - 2 * LINE_HEIGHT;
-
-            float contentWidth = pageWidth - 2 * MARGIN_LEFT;
-            float columnWidth = (contentWidth - COLUMN_GAP) / 2;
-            float leftColumnX = MARGIN_LEFT;
-            float rightColumnX = MARGIN_LEFT + columnWidth + COLUMN_GAP;
+            int itemsPerColumn = layout.rows();
+            float answersStartY = pageHeight - layout.marginTop() - HEADER_LINE_OFFSET;
 
             for (int i = 0; i < total; i++) {
                 Task task = tasks.get(i);
@@ -116,12 +95,11 @@ public class PDFLayoutService {
                 int column = i / itemsPerColumn;
                 int row = i % itemsPerColumn;
 
-                float x = (column == 0) ? leftColumnX : rightColumnX;
-                float y = contentStartY - row * LINE_HEIGHT;
+                float x = layout.columnX(column);
+                float y = answersStartY - row * layout.lineHeight();
 
                 String line = index + ") " + task.answer();
-
-                showSafeText(contentStream, font, TEXT_FONT_SIZE, x, y, line);
+                showSafeText(contentStream, font, layout.taskFontSize(), x, y, line);
             }
         } catch (IOException e) {
             log.error("Ошибка при рисовании страницы с ответами", e);

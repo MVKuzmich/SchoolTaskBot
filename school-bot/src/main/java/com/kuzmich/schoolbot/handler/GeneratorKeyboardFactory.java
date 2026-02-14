@@ -150,10 +150,12 @@ public final class GeneratorKeyboardFactory {
     }
 
     /**
-     * Клавиатура выбора количества примеров.
+     * Клавиатура выбора количества примеров (пресеты 10, 20, 30, 50).
      */
     public static InlineKeyboardMarkup quantitySelectionKeyboard(String qty10Label,
                                                                  String qty20Label,
+                                                                 String qty30Label,
+                                                                 String qty50Label,
                                                                  String backLabel,
                                                                  String menuLabel) {
         return InlineKeyboardMarkup.builder()
@@ -165,6 +167,15 @@ public final class GeneratorKeyboardFactory {
                         InlineKeyboardButton.builder()
                                 .text(qty20Label)
                                 .callbackData(CallbackData.QTY_20)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(qty30Label)
+                                .callbackData(CallbackData.QTY_30)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(qty50Label)
+                                .callbackData(CallbackData.QTY_50)
                                 .build()))
                 .keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
@@ -211,6 +222,23 @@ public final class GeneratorKeyboardFactory {
                                 .callbackData(CallbackData.GEN_DEMO_PDF)
                                 .build()))
                 .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(menuLabel)
+                                .callbackData(CallbackData.MENU)
+                                .build()))
+                .build();
+    }
+
+    /**
+     * Клавиатура «Назад» и «Главное меню» (например, после заглушки «в разработке»).
+     */
+    public static InlineKeyboardMarkup backAndMenuKeyboard(String backLabel, String menuLabel) {
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(backLabel)
+                                .callbackData(CallbackData.BACK_TO_CLASS)
+                                .build(),
                         InlineKeyboardButton.builder()
                                 .text(menuLabel)
                                 .callbackData(CallbackData.MENU)

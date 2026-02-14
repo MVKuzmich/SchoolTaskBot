@@ -82,6 +82,12 @@
             <artifactId>pdfbox</artifactId>
             <version>${pdfbox.version}</version>
         </dependency>
+        <!-- Шрифт DejaVu Sans (кириллица) для PDF: используется по умолчанию, если свой не задан -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-fonts</artifactId>
+            <version>6.21.5</version>
+        </dependency>
     </dependencies>
 
     <build>

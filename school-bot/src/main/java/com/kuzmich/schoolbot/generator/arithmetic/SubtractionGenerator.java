@@ -17,7 +17,7 @@ import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
 
 /**
  * Генератор примеров на вычитание в пределах заданного максимума (например 10).
- * Алгоритм: a ∈ [min, max], b ∈ [0, a], ответ a - b (неотрицательный); вопрос «a - b = __».
+ * Алгоритм: a ∈ [min, max], b ∈ [0, a], ответ a - b (неотрицательный); вопрос «a - b = » (пустое место для ответа).
  */
 @Component
 public class SubtractionGenerator implements ArithmeticTaskGenerator {

@@ -48,7 +48,7 @@ class Addition20NoCarryGeneratorTest {
     @DisplayName("все примеры в пределах 20 и без перехода через десяток")
     void shouldNotCrossDecimal_addition20() {
         when(messageService.getText(anyString(), any(), any()))
-                .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = __");
+                .thenAnswer(inv -> inv.getArgument(1) + " + " + inv.getArgument(2) + " = ");
 
         ArithmeticContext context = ArithmeticContext.builder()
                 .operationType(OperationType.ADDITION_20_NO_CARRY)
@@ -62,7 +62,7 @@ class Addition20NoCarryGeneratorTest {
         assertThat(tasks).hasSize(50);
         assertThat(tasks).allMatch(task -> {
             String question = task.question();
-            String[] parts = question.replace(" = __", "").split(" \\+ ");
+            String[] parts = question.replace(" = ", "").split(" \\+ ");
             int a = Integer.parseInt(parts[0].trim());
             int b = Integer.parseInt(parts[1].trim());
             int answer = Integer.parseInt(task.answer());

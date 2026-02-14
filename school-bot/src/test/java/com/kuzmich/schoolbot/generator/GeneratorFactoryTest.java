@@ -59,9 +59,9 @@ class GeneratorFactoryTest {
             Object b = inv.getArgument(2);
             String key = inv.getArgument(0, String.class);
             if (key != null && key.contains("subtraction")) {
-                return a + " - " + b + " = __";
+                return a + " - " + b + " = ";
             }
-            return a + " + " + b + " = __";
+            return a + " + " + b + " = ";
         });
 
         TaskGenerator gen = factory.getGenerator(OperationType.ADDITION_10);
@@ -90,9 +90,9 @@ class GeneratorFactoryTest {
             Object b = inv.getArgument(2);
             String key = inv.getArgument(0, String.class);
             if (key != null && key.contains("subtraction")) {
-                return a + " - " + b + " = __";
+                return a + " - " + b + " = ";
             }
-            return a + " + " + b + " = __";
+            return a + " + " + b + " = ";
         });
 
         TaskGenerator gen = factory.getGenerator(OperationType.SUBTRACTION_10);
@@ -118,9 +118,9 @@ class GeneratorFactoryTest {
             Object b = inv.getArgument(2);
             String key = inv.getArgument(0, String.class);
             if (key != null && key.contains("subtraction")) {
-                return a + " - " + b + " = __";
+                return a + " - " + b + " = ";
             }
-            return a + " + " + b + " = __";
+            return a + " + " + b + " = ";
         });
 
         TaskGenerator gen = factory.getGenerator(OperationType.ADDITION_20_NO_CARRY);
@@ -136,7 +136,7 @@ class GeneratorFactoryTest {
                 .hasSize(10)
                 .allMatch(t -> {
                     String q = t.question();
-                    String[] parts = q.replace(" = __", "").split(" \\+ ");
+                    String[] parts = q.replace(" = ", "").split(" \\+ ");
                     int a = Integer.parseInt(parts[0].trim());
                     int b = Integer.parseInt(parts[1].trim());
                     return (a % 10) + (b % 10) < 10;
@@ -151,9 +151,9 @@ class GeneratorFactoryTest {
             Object b = inv.getArgument(2);
             String key = inv.getArgument(0, String.class);
             if (key != null && key.contains("subtraction")) {
-                return a + " - " + b + " = __";
+                return a + " - " + b + " = ";
             }
-            return a + " + " + b + " = __";
+            return a + " + " + b + " = ";
         });
 
         TaskGenerator gen = factory.getGenerator(OperationType.SUBTRACTION_20_NO_CARRY);
@@ -169,7 +169,7 @@ class GeneratorFactoryTest {
                 .hasSize(10)
                 .allMatch(t -> {
                     String q = t.question();
-                    String[] parts = q.replace(" = __", "").split(" - ");
+                    String[] parts = q.replace(" = ", "").split(" - ");
                     int a = Integer.parseInt(parts[0].trim());
                     int b = Integer.parseInt(parts[1].trim());
                     return (a % 10) >= (b % 10) && Integer.parseInt(t.answer()) >= 0;

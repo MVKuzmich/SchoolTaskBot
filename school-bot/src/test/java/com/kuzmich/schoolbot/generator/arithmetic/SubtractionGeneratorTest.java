@@ -72,7 +72,7 @@ class SubtractionGeneratorTest {
         @DisplayName("все ответы корректны: a - b = answer, результат не отрицательный")
         void shouldGenerateCorrectAnswers_subtraction() {
             when(messageService.getText(anyString(), any(), any()))
-                    .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = __");
+                    .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = ");
 
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.SUBTRACTION_10)
@@ -87,7 +87,7 @@ class SubtractionGeneratorTest {
                     .allMatch(task -> {
                         String question = task.question();
                         int answer = Integer.parseInt(task.answer());
-                        String[] parts = question.replace(" = __", "").split(" - ");
+                        String[] parts = question.replace(" = ", "").split(" - ");
                         int a = Integer.parseInt(parts[0].trim());
                         int b = Integer.parseInt(parts[1].trim());
                         return a - b == answer && answer >= 0;
@@ -115,7 +115,7 @@ class SubtractionGeneratorTest {
         @DisplayName("при quantity больше размера домена возвращает все уникальные примеры (без дублей)")
         void shouldGenerateAtMostDomainSize_whenQuantity200() {
             when(messageService.getText(anyString(), any(), any()))
-                    .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = __");
+                    .thenAnswer(inv -> inv.getArgument(1) + " - " + inv.getArgument(2) + " = ");
 
             ArithmeticContext context = ArithmeticContext.builder()
                     .operationType(OperationType.SUBTRACTION_10)

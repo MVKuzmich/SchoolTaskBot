@@ -20,7 +20,7 @@ import com.kuzmich.schoolbot.i18n.GeneratorMessageKeys;
  * Генератор примеров на сложение в пределах заданного максимума (например 10).
  * Использует домен + уровни ослабления + квоты и двухпроходный отбор
  * ({@link ArithmeticGenerationUtils}).
- * Домен: a ∈ [min, max], b ∈ [0, max - a], ответ a + b; вопрос «a + b = __».
+ * Домен: a ∈ [min, max], b ∈ [0, max - a], ответ a + b; вопрос «a + b = » (пустое место для ответа).
  */
 @Component
 public class AdditionGenerator implements ArithmeticTaskGenerator {

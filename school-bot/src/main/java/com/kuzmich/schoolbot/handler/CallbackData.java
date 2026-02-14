@@ -41,6 +41,10 @@ public final class CallbackData {
     public static final String QTY_10 = "qty_10";
     /** Количество примеров: 20. */
     public static final String QTY_20 = "qty_20";
+    /** Количество примеров: 30. */
+    public static final String QTY_30 = "qty_30";
+    /** Количество примеров: 50. */
+    public static final String QTY_50 = "qty_50";
 
     /** Подтверждение генерации PDF с выбранными параметрами. */
     public static final String GEN_CONFIRM_PDF = "gen_confirm_pdf";

@@ -60,7 +60,7 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
                 CallbackData.GEN_SECONDARY, CallbackData.SUBJECT_MATH, CallbackData.TOPIC_ARITHMETIC,
                 CallbackData.OP_ADDITION_10, CallbackData.OP_SUBTRACTION_10,
                 CallbackData.OP_ADDITION_20_NO_CARRY, CallbackData.OP_SUBTRACTION_20_NO_CARRY,
-                CallbackData.QTY_10, CallbackData.QTY_20,
+                CallbackData.QTY_10, CallbackData.QTY_20, CallbackData.QTY_30, CallbackData.QTY_50,
                 CallbackData.GEN_DEMO_PDF, CallbackData.GEN_CONFIRM_PDF,
                 CallbackData.BACK_TO_MODE, CallbackData.BACK_TO_CLASS, CallbackData.MENU, "help");
         var message = Validation.requireNonNull(callbackQuery.getMessage(), "message");
@@ -83,7 +83,7 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
                     CallbackData.OP_ADDITION_20_NO_CARRY,
                     CallbackData.OP_SUBTRACTION_20_NO_CARRY ->
                     handleOperationSelected(client, chatId, userId, data);
-            case CallbackData.QTY_10, CallbackData.QTY_20 ->
+            case CallbackData.QTY_10, CallbackData.QTY_20, CallbackData.QTY_30, CallbackData.QTY_50 ->
                     handleQuantitySelected(client, chatId, userId, data);
             case CallbackData.GEN_CONFIRM_PDF -> handleConfirmPdf(client, chatId, userId);
             case CallbackData.GEN_DEMO_PDF -> handleDemoPdf(client, chatId, userId);
@@ -132,11 +132,10 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
     }
 
     private void handleGenSecondary(TelegramClient client, Long chatId, Long userId) {
-        UserContext ctx = userContextService.getOrCreate(userId);
-        ctx.setSchoolLevel(SchoolLevel.SECONDARY);
-        userContextService.save(ctx);
-        userStateService.setState(userId, UserState.AWAITING_SUBJECT);
-        showSubjectSelection(client, chatId, messageService.getText(GeneratorMessageKeys.CLASS_SECONDARY));
+        String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
+        String menu = messageService.getText(GeneratorMessageKeys.BUTTON_MENU);
+        messageService.sendFromKey(client, chatId, GeneratorMessageKeys.CLASS_SECONDARY_COMING_SOON,
+                GeneratorKeyboardFactory.backAndMenuKeyboard(back, menu));
     }
 
     private void showSubjectSelection(TelegramClient client, Long chatId, String schoolLevelLabel) {
@@ -213,15 +212,17 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
 
         String qty10 = messageService.getText(GeneratorMessageKeys.QUANTITY_10);
         String qty20 = messageService.getText(GeneratorMessageKeys.QUANTITY_20);
+        String qty30 = messageService.getText(GeneratorMessageKeys.QUANTITY_30);
+        String qty50 = messageService.getText(GeneratorMessageKeys.QUANTITY_50);
         String back = messageService.getText(GeneratorMessageKeys.BUTTON_BACK);
         String menu = messageService.getText(GeneratorMessageKeys.BUTTON_MENU);
 
         messageService.sendFromKey(client, chatId, GeneratorMessageKeys.QUANTITY_TITLE,
-                GeneratorKeyboardFactory.quantitySelectionKeyboard(qty10, qty20, back, menu));
+                GeneratorKeyboardFactory.quantitySelectionKeyboard(qty10, qty20, qty30, qty50, back, menu));
     }
 
     private void handleQuantitySelected(TelegramClient client, Long chatId, Long userId, String data) {
-        int quantity = CallbackData.QTY_10.equals(data) ? 10 : 20;
+        int quantity = quantityFromCallback(data);
         UserContext ctx = userContextService.getOrCreate(userId);
         ctx.setQuantity(quantity);
         userContextService.save(ctx);
@@ -277,6 +278,16 @@ public class GeneratorCallbackHandler implements CallbackQueryHandler {
             messageService.sendFromKey(client, chatId, GeneratorMessageKeys.PDF_GENERATION_ERROR);
             userStateService.setState(userId, UserState.ERROR);
         }
+    }
+
+    private static int quantityFromCallback(String data) {
+        return switch (data) {
+            case CallbackData.QTY_10 -> 10;
+            case CallbackData.QTY_20 -> 20;
+            case CallbackData.QTY_30 -> 30;
+            case CallbackData.QTY_50 -> 50;
+            default -> 20;
+        };
     }
 
     private OperationType mapCallbackToOperationType(String data) {
